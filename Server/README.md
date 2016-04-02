@@ -10,6 +10,12 @@ It basically has three parts:
 2. The communication with the applications that use the data
 3. The internal database
 
+### The communication with the Arduinos
+
+### The communication with the Applications
+
+### The database
+
 ###TODO:
 
 * Write documentation for the protocol
