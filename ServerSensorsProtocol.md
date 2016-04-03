@@ -4,12 +4,6 @@
 
 The protocol used for communication is ModBus RTU. This means that the communication will take place through the serial port. 
 
-<<<<<<< HEAD
-The wire protocol used will be 485.
-
-###Details of the read data
-
-=======
 The wire protocol used will be 485 over 2 wires.
 
 ###Details of the read data
@@ -70,5 +64,4 @@ ADDR 04 10 00 17 00 38 07 E0 00 04 00 03 00 0C 00 0A 00 32 CRC
 
 (TODO - verify please)
 
->>>>>>> 17640ce24b1c80fbb64e351d9a6eee860313ec85
 
