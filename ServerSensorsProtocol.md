@@ -56,11 +56,12 @@ The sensor will store the time in the following format:
 When reading input register the server will normally ask for 8 registers (100 - 107) because the time a value was read is also needed.
 
 So the package from the server would contain for address ADDR:
-ADDR 04 64 00 08 CRC
+
+_ADDR 04 00 64 00 08 CRC_
 
 The response would contain for a value of 23.56 read in 2016-04-03 12:10:50 :
 
-ADDR 04 10 00 17 00 38 07 E0 00 04 00 03 00 0C 00 0A 00 32 CRC 
+_ADDR 04 00 10 00 17 00 38 07 E0 00 04 00 03 00 0C 00 0A 00 32 CRC_
 
 (TODO - verify please)
 
