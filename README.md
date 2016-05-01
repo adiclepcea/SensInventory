@@ -1,5 +1,5 @@
 # SensInventory
-##System for keeping imventory based on sensors
+##System for keeping inventory based on sensors
 
 ###What it is meant to be
 
