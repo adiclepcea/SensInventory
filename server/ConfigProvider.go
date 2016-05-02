@@ -1,11 +1,11 @@
-package sensinventory
+package server
 
 import (
 	"errors"
 	"fmt"
 	"log"
 
-	"github.com/adiclepcea/SensInventory/Server/common"
+	"github.com/adiclepcea/SensInventory/server/common"
 )
 
 const MIN_ADDRESS int = 1
@@ -95,7 +95,7 @@ func (this *ConfigProvider) ChangeSensor(address int, after common.Sensor) *erro
 	}
 
 	sensorBefore.Description = after.Description
-	sensorBefore.ReadValues = after.ReadValues
+	sensorBefore.ConfiguredValues = after.ConfiguredValues
 	this.Sensors[sensorBefore.Address] = *sensorBefore
 
 	return nil

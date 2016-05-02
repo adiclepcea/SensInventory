@@ -1,11 +1,11 @@
-package sensinventory
+package server
 
 import (
 	"testing"
 
 	"reflect"
 
-	"github.com/adiclepcea/SensInventory/Server/common"
+	"github.com/adiclepcea/SensInventory/server/common"
 )
 
 func TestAddSensorShouldFail(t *testing.T) {
@@ -37,7 +37,7 @@ func TestAddSensorShouldOk(t *testing.T) {
 	conf := ConfigProvider{}.NewConfigProvider()
 
 	sensor1 := common.Sensor{Address: 2, Description: "sensor 1",
-		ReadValues: []common.ReadValue{common.ReadValue{Name: "test ReadValue",
+		ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
 			RegisterAddress: 100, RegisterLength: 2}}}
 
 	err := conf.AddSensor(sensor1)
@@ -52,8 +52,8 @@ func TestAddSensorShouldOk(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(sensor1, *sensorBack) {
-		t.Error("Expected", sensor1.Address, ",", sensor1.Description, ",", sensor1.ReadValues,
-			"got", sensorBack.Address, ",", sensorBack.Description, ",", sensorBack.ReadValues)
+		t.Error("Expected", sensor1.Address, ",", sensor1.Description, ",", sensor1.ConfiguredValues,
+			"got", sensorBack.Address, ",", sensorBack.Description, ",", sensorBack.ConfiguredValues)
 	}
 }
 
@@ -161,7 +161,7 @@ func TestChangeSensorShouldOk(t *testing.T) {
 	conf.AddSensor(sensor)
 
 	sensor2 := common.Sensor{Address: 2, Description: "Test 2",
-		ReadValues: []common.ReadValue{common.ReadValue{Name: "test ReadValue",
+		ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
 			RegisterAddress: 100, RegisterLength: 2}}}
 
 	err := conf.ChangeSensor(sensor.Address, sensor2)
@@ -172,7 +172,7 @@ func TestChangeSensorShouldOk(t *testing.T) {
 
 	sensor1, _ := conf.GetSensorByAddress(sensor.Address)
 
-	if sensor1.Description != sensor2.Description || !reflect.DeepEqual(sensor1.ReadValues, sensor2.ReadValues) {
+	if sensor1.Description != sensor2.Description || !reflect.DeepEqual(sensor1.ConfiguredValues, sensor2.ConfiguredValues) {
 		t.Error("Expected", sensor2, "got", *sensor1)
 	}
 }

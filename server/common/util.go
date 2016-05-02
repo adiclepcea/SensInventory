@@ -2,19 +2,20 @@ package common
 
 import "time"
 
-type ReadValue struct {
-	Name            string
-	RegisterAddress int
-	RegisterLength  int8 //1 or 2
+type ConfiguredValue struct {
+	Name            string `json:"name"`
+	RegisterAddress int    `json:"registeredAddress"`
+	RegisterLength  int8   `json:"registerLength"` //1 or 2
 }
 
 type Reading struct {
-	ReadSensor Sensor
-	Time       time.Time
+	ReadSensor Sensor        `json:"readSensor"`
+	ReadValues []interface{} `json:"readValues"`
+	Time       time.Time     `json:"time"`
 }
 
 type Sensor struct {
-	Address     int //485 address
-	Description string
-	ReadValues  []ReadValue
+	Address          int               `json:"address"` //485 address
+	Description      string            `json:"description"`
+	ConfiguredValues []ConfiguredValue `json:"configuredValues"`
 }

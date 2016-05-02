@@ -1,8 +1,8 @@
-package sensinventory
+package server
 
-import "github.com/adiclepcea/SensInventory/Server/common"
+import "github.com/adiclepcea/SensInventory/server/common"
 
 type IReadingProvider interface {
 	NewReadingProvider(*ConfigProvider) IReadingProvider
-	GetReading(common.Sensor) *common.Reading
+	GetReading(int) (*common.Reading, *error)
 }
