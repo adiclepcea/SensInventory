@@ -4,7 +4,7 @@ import "time"
 
 type ConfiguredValue struct {
 	Name            string `json:"name"`
-	RegisterAddress int    `json:"registeredAddress"`
+	RegisterAddress int    `json:"registerAddress"`
 	RegisterLength  int8   `json:"registerLength"` //1 or 2
 }
 
