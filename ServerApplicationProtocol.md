@@ -14,80 +14,80 @@ The data format used to communicate is json.
 
 We have the following available operations on the server side (the server has the address *server* and the sensor has the address *10*:
 
-* Read the last value from a sensor:
- * GET request to http://server/sensor/10
- * json response example: 
-
- ```
- 	{
- 		"readings": [{
-			"address": "10",
-			"time": "2016-04-03 12:00:00",
-			"value1": "33.21"
+#### Read the last value from a sensor:
+* GET request to http://server/sensor/10 (curl -i http://localhost:8082/sensor/10)
+* json response example: 
+ 
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Date: Wed, 04 May 2016 06:54:29 GMT
+Content-Length: 199
+{
+	"readSensor": {
+		"address": 10,
+		"description": "Sensor 10 - Weight sensor",
+		"configuredValues": [{
+			"name": "test ReadValue",
+			"registerAddress": 100,
+			"registerLength": 2
 		}]
-	}
- ```
+	},
+	"readValues": [0.8980626],
+	"time": "2016-05-04T06:54:29.158158472Z"
+}
+```
 
-* Read the list of values from a sensor in a certain frame ie. for reading starting from 2016-04-03 12:00:10 up to 2016-04-04 11:30:00: 
- * GET request to http://server/sensor/address=10&start=20160403_120010&end=20160404_113000
- * json response example:
+#### Add a new sensor for reading:
+* POST request to http://server (in the example below we add sensor 100 - the valid values are 1 - 32 and 100 -, the value 100 could be used for any new sensor. 
+```
+curl -H "Content-Type: application/json" -X POST -i http://localhost:8082/sensor -d "{\"address\":100,\"description\":\"New Sensor\",\"configuredValues\":[{\"name\":\"test ReadValue\",\"registerAddress\":80,\"registerLength\":2},{\"name\":\"byte read value\",\"registerAddress\":82,\"registerLength\":1}]}"
+```
+* Response when OK:
+```
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+Date: Wed, 04 May 2016 07:07:41 GMT
+Content-Length: 5
 
- ```
-	{
-		"readings": [{
-			"address": "10",
-			"time": "2016:04:03 12:00:00",
-			"value1": "33.21"
-		}, {
-			"address": "10",
-			"time": "2016:04:03 12:00:10",
-			"value1": "33.21"
-		}, 
+null
+```
 
-		...
-		
-		{
-			"address": "10",
-			"time": "2016:04:04 11:30:00",
-			"value1": "30.21"
-		}]
-	}
- ```
+* Notice that the server might also respons with an error status when the sensor cannot be added (i.e. there might be allready a sensor with this address or the json might be malformed etc.)
 
-* Write the time to a sensor (the time written to the sensor will be the time that is set on ther server when the request was made) ie. for setting the time to 2016-04-03 12:00:00: 
- * PUT request to http://server
- * json contents of the message:
+####Change a sensor
+* PUT request to http://server (in the example below we change the sensor added above. Notice that the address 100 will be moved to address 3 and also the name of the first read value will be changed to "First read value"
+```
+curl -H "Content-Type: application/json" -X PUT -i http://localhost:8082/sensor/3 -d "{\"address\":100,\"description\":\"New Sensor\",\"configuredValues\":[{\"name\":\"First read value\",\"registerAddress\":80,\"registerLength\":2},{\"name\":\"byte read value\",\"registerAddress\":82,\"registerLength\":1}]}"
+```
 
- ```
- 	{
-		"settings": [{
-			"address": "10",
-			"setting": "time"
-		}]
-	}
- ```
+* Response from server when OK:
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Date: Wed, 04 May 2016 07:13:33 GMT
+Content-Length: 5
 
-* Assign an address to a new sensor (add sensor with address 10 here):
- * POST request to http://server
- * json contents of the message:
+null
+```
+* Notice that the server might also respond with error status when there are problems while changing the sensor
 
- ```        
- 	{
-		"address": "10"
-	}
-	
- ```
+#### Remove a sensor from reading:
 
-* Remove a sensor from reading:
- * DELETE request to http://server
- * json contents of the message:
+* DELETE request to http://server:
+```
+curl -X DELETE -i http://localhost:8082/sensor/100
+```
 
- ```        
- 	{
-		"address": "10"
-	}
-	
- ```
+* Response when OK:
+```        
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Date: Wed, 04 May 2016 07:16:56 GMT
+Content-Length: 5
+
+null	
+```
 
 ### Future
 
