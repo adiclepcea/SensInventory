@@ -1,0 +1,35 @@
+---
+connection:
+  -
+    port: /dev/ttyUSB0
+    speed: 115200
+slaves:
+  -
+    address: 1
+    description: "test slave 1"
+    registries:
+      -
+        length: 2
+        location: 0
+        max: 1024
+        min: 0
+        type: holding #holding, input, coil, input_discrete
+        value: random_generated #random_generated, fixed, read
+      -
+        length: 1
+        location: 2
+        max: 255
+        min: 0
+        type: holding
+        value: random_generated
+  -
+    address: 2
+    description: "test slave 2"
+    registries:
+      -
+        length: 1
+        location: 0
+        max: 50
+        min: 0
+        type: holding
+        value: random_generated
