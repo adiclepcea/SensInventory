@@ -1,7 +1,7 @@
 TARGET=modbus_client
 
 build:
-	@(gcc *.c -o $(TARGET) -l:libyaml.a)
+	@(gcc *.c -o $(TARGET) -l:libyaml.a -lmodbus)
 
 
 clean:

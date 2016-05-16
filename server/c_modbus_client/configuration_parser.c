@@ -296,7 +296,7 @@ int parse_connection(yaml_parser_t *parser, Configuration *config, char *error){
             return 1;
           }
           int speed = atoi(event.data.scalar.value);
-          speed = get_speed(speed);
+          //speed = get_speed(speed);
           if(speed ==0 ){
             snprintf(error,ERROR_SIZE,"Invalid speed detected. %s",event.data.scalar.value);
             yaml_event_delete(&event);

@@ -10,14 +10,14 @@ slaves:
     registries:
       -
         length: 2
-        location: 0
+        location: 10
         max: 1024
         min: 0
         type: holding #holding, input, coil, input_discrete
         value: random_generated #random_generated, fixed, read
       -
         length: 1
-        location: 2
+        location: 11
         max: 255
         min: 0
         type: holding

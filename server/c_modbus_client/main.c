@@ -1,78 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <modbus/modbus.h>
+#include <time.h>
 #include "configuration_parser.h"
-
-int setup_interface(char *portname, int speed, int parity, char *error ){
-
-  int fd = open(portname, O_RDWR | O_NOCTTY | O_NDELAY);
-
-  if (fd ==-1){ //port open failed
-    snprintf(error,ERROR_SIZE, "%s",strerror(errno)); //we store the error
-    return fd;
-  }
-
-  struct termios tty;
-  memset(&tty,0,sizeof(tty));
-
-  if(tcgetattr(fd,&tty)!=0){
-    snprintf(error,ERROR_SIZE, "%s from tcgetattr",strerror(errno)); //we store the error
-    return -1;
-  }
-
-  cfsetospeed(&tty,speed);
-  cfsetispeed(&tty,speed);
-
-  tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
-  tty.c_iflag &= ~IGNBRK; //no break processing
-  tty.c_lflag = 0; //no echo, signal chars etc.
-  tty.c_oflag = 0; //no delays, remappings
-  tty.c_cc[VMIN]  = 0; //read doesn't block
-  tty.c_cc[VTIME] = 5; //0.5 seconds read timeout
-  tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
-  tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls, enable reading
-  tty.c_cflag &= ~(PARENB | PARODD);      // shut off parity
-  tty.c_cflag |= parity;
-  tty.c_cflag &= ~CSTOPB;
-  tty.c_cflag &= ~CRTSCTS;
-
-  if (tcsetattr (fd, TCSANOW, &tty) != 0)
-  {
-    snprintf(error,ERROR_SIZE, "%s from tcsetattr",strerror(errno)); //we store the error
-    return -1;
-  }
-
-  if (set_blocking(fd,0,error)!=0){
-    close(fd);
-    return -1;
-  }
-
-  return fd;
-}
-
-int set_blocking (int fd, int should_block, char *error)
-{
-  struct termios tty;
-  memset (&tty, 0, sizeof tty);
-  if (tcgetattr (fd, &tty) != 0)
-  {
-    snprintf (error,ERROR_SIZE, "error %d from tggetattr", errno);
-    return -1;
-  }
-
-  tty.c_cc[VMIN]  = should_block ? 1 : 0;
-  tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
-
-  if (tcsetattr (fd, TCSANOW, &tty) != 0){
-    snprintf (error,ERROR_SIZE,"error %d setting term attributes", errno);
-    return -1;
-  }
-  return 0;
-}
 
 void print_config(Configuration *config){
   printf("config->slaves_count: %d\n",config->slaves_count);
@@ -93,6 +27,108 @@ void print_config(Configuration *config){
       printf("reg value_type: %d\n",config->slaves[i].registries[j].value_type);
     }
   }
+}
+
+int generate_value(int min, int max){
+  if(max<min){
+    int temp = min;
+    min = max;
+    max = temp;
+  }
+  srand(time(NULL));
+  int r = rand();
+  r = r % (max-min);
+
+  return r;
+}
+
+//TODO implement other types besides holding registers
+int start_modbus_client(Configuration *config, char parity, int data_bit, int stop_bit, char *error){
+  modbus_t *modbus;
+
+  if(config->slaves_count==0 || config->slaves[0].registries_count==0){
+    strcpy(error,"Invalid configuration");
+    return 1;
+  }
+
+  //we will only use the first slave for now
+  int i;
+  int start_output_coils_address=0;
+  int no_of_output_coils = 0;
+  int start_input_coils_address=0;
+  int no_of_input_coils = 0;
+  int start_holding_registers_address=0;
+  int no_of_holding_registers = 0;
+  int start_input_registers_address=0;
+  int no_of_input_registers = 0;
+
+
+  for(i=0;i<config->slaves[0].registries_count;i++){
+    if(config->slaves[0].registries[i].type == coil){
+
+    }else if(config->slaves[0].registries[i].type == input_discrete){
+
+    }else if(config->slaves[0].registries[i].type == holding){
+      no_of_holding_registers++;
+      if(no_of_holding_registers==1){
+        start_holding_registers_address = config->slaves[0].registries[i].location;
+      }
+    }else{
+
+    }
+  }
+  //(output coil, input coil, holding registers,input registers)
+  modbus_mapping_t *mapping = modbus_mapping_new_start_address(
+    start_output_coils_address,no_of_output_coils,
+    start_input_coils_address,no_of_input_coils,
+    start_holding_registers_address,no_of_holding_registers,
+    start_input_registers_address,no_of_input_registers);
+  if(!mapping){
+    snprintf(error,ERROR_SIZE,"Failed to allocate the mapping: %s", modbus_strerror(errno));
+  }
+
+  modbus = modbus_new_rtu(config->conn.port, config->conn.speed, parity, data_bit, stop_bit);
+  if (modbus == NULL) {
+    snprintf(error,ERROR_SIZE,"Unable to create the libmodbus context: %s", modbus_strerror(errno));
+    return 1;
+  }
+
+  if(modbus_set_slave(modbus,3)==-1){
+      strcpy(error,"Invalid slave id");
+      modbus_free(modbus);
+      return 1;
+  }
+
+  if(modbus_connect(modbus)==-1){
+    snprintf(error,ERROR_SIZE,"Connection failed: %s",modbus_strerror(errno));
+    modbus_free(modbus);
+    return 1;
+  }
+
+
+
+  uint8_t req[MODBUS_RTU_MAX_ADU_LENGTH];// request buffer
+  int len;// length of the request/response
+
+  while(1) {
+    int pos = start_output_coils_address+no_of_output_coils+
+      start_input_coils_address+no_of_input_coils;
+    mapping->tab_registers[pos] = generate_value(config->slaves[0].registries[0].min,config->slaves[0].registries[0].max);
+    len = modbus_receive(modbus, req);
+    if (len == -1) break;
+
+    len = modbus_reply(modbus, req, len, mapping);
+    if (len == -1) break;
+  }
+
+  printf("Exit the loop: %s\n", modbus_strerror(errno));
+
+  modbus_mapping_free(mapping);
+
+  modbus_close(modbus);
+  modbus_free(modbus);
+
+  return 0;
 }
 
 int main(int argc, char **args){
@@ -117,18 +153,14 @@ int main(int argc, char **args){
 		return 1;
 	}
 
-  //print_config(&config);
+  rez = start_modbus_client(&config,'N',8,1,error);
 
-  int fd = setup_interface(config.conn.port,config.conn.speed,0,error); //change second param for speed
-  if (fd==-1){ //error
-    fprintf(stderr, "failed to setup and open interface %s: %s\n",config.conn.port, error);
-    free(error);
+  if(rez!=0){
+    fprintf(stderr, "%s\n", error);
     return 1;
-  }else{
-    write(fd,"hello!\r\n",strlen("hello!\r\n"));
-    usleep ((7 + 25) * 100);
-    close(fd);
   }
+
+  //print_config(&config);
 
   return 0;
 }
