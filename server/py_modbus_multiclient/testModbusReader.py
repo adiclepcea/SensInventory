@@ -90,5 +90,7 @@ class TestModbusReader(unittest.TestCase):
         self.assertEqual(r[6],167)
 
 
+
+
 if __name__ == '__main__':
     unittest.main()

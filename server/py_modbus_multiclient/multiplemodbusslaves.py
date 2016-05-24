@@ -7,6 +7,7 @@ import Queue
 import random
 from time import sleep
 import os
+import logging
 
 VALUE_RANDOM = "random_generated"
 VALUE_FIXED = "fixed"
@@ -68,6 +69,7 @@ class Slave:
         request_type = 0
         try:
             request_type = package[1]
+            #we do not implement write functions, so we only mock a write and return the confirm package
             if request_type == 0x06 or request_type==0x05:
                 return writeRegistry(package)
             location_to_read = package[2] * 256 + package[3]
@@ -85,8 +87,9 @@ class Slave:
                 package.append(bytes_to_follow)
                 for i in xrange(0,len(values),8):
                     r = 0
-                    for j in range(0,min(8,len(values)-i)):
-                        r = (r<<1)+(1 if values[i+j] else 0)
+                    for j in range(min(7,len(values)-i-1),-1,-1):
+                        r = (r<<1)+(1 if values[8*(i/8)+j] else 0)
+                    print r
                     package.append(r)
             elif request_type == 3 or request_type == 4: #for registers and inputs we put 2 bytes for register
                 bytes_to_follow = len(values)*2
