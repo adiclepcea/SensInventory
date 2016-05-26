@@ -23,11 +23,11 @@ class TestModbusReader(unittest.TestCase):
     def test_crc(self):
         mr = modbusreader.ModBusReader(None,None)
         st = [0x01,0x04,0x00,0x01,0x00,0x02]
-        crc = mr.crc16(st)
+        crc = modbusreader.crc16(st)
         self.assertEqual(crc,0x0b20)
 
         st = [0x11,0x03,0x00,0x6B,0x00,0x03]
-        crc = mr.crc16(st)
+        crc = modbusreader.crc16(st)
         self.assertEqual(crc%256,0x76)
         self.assertEqual(crc/256,0x87)
 
@@ -36,7 +36,7 @@ class TestModbusReader(unittest.TestCase):
         q = Queue.Queue()
         mr = modbusreader.ModBusReader([slave],q)
         q.put(0x10)
-        self.assertEqual(mr.checkForFullPackage(),modbusreader.NO_FULL_PACKAGE_AVAILABLE)
+        self.assertEqual(mr.check_for_full_package(),modbusreader.NO_FULL_PACKAGE_AVAILABLE)
         q.get()
         q.put(0x00)#just for test
         q.put(0x01)#address 1
@@ -47,8 +47,7 @@ class TestModbusReader(unittest.TestCase):
         q.put(0x01)#read only one register
         q.put(0xd5)#crc byte 2
         q.put(0xca)#crc byte 1
-        self.assertEqual(mr.checkForFullPackage(),modbusreader.PACKAGE_OK)
-        #print mr.response
+        self.assertEqual(mr.check_for_full_package(),modbusreader.PACKAGE_OK)
 
         q.put(0x01)#address 1
         q.put(0x03)#read holding registers
@@ -58,7 +57,7 @@ class TestModbusReader(unittest.TestCase):
         q.put(0x01)#read only one register
         q.put(0xd5)#crc byte 2
         q.put(0xc1)#wrong crc byte 1
-        self.assertEqual(mr.checkForFullPackage(),modbusreader.INCORRECT_CRC)
+        self.assertEqual(mr.check_for_full_package(),modbusreader.INCORRECT_CRC)
 
         slave.address = 2
         mr = modbusreader.ModBusReader([slave],q)
@@ -70,7 +69,7 @@ class TestModbusReader(unittest.TestCase):
         q.put(0x01)#read only one register
         q.put(0xd5)#crc byte 2
         q.put(0xca)#crc byte 1
-        self.assertEqual(mr.checkForFullPackage(),modbusreader.NO_SLAVE_MATCH)
+        self.assertEqual(mr.check_for_full_package(),modbusreader.NO_SLAVE_MATCH)
 
     def test_package_response(self):
         slave = self.init_slave_for_test(multiplemodbusslaves.VALUE_FIXED)
@@ -84,7 +83,7 @@ class TestModbusReader(unittest.TestCase):
         q.put(0x01)#read only one register
         q.put(0xd5)#crc byte 2
         q.put(0xca)#crc byte 1
-        self.assertEqual(mr.checkForFullPackage(),modbusreader.PACKAGE_OK)
+        self.assertEqual(mr.check_for_full_package(),modbusreader.PACKAGE_OK)
         r = mr.response
         self.assertEqual(len(r),7)
         self.assertEqual(r[6],167)
