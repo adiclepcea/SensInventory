@@ -14,21 +14,29 @@ func TestAddSensorShouldFail(t *testing.T) {
 	sensor1 := common.Sensor{}
 	sensor1.Address = 1
 	sensor1.Description = "Mock"
+	sensor1.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+		RegisterAddress: 100, RegisterLength: 2}}
 
 	sensor2 := common.Sensor{}
 	sensor2.Address = 1
 	sensor2.Description = "Should fail"
+	sensor2.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+		RegisterAddress: 100, RegisterLength: 2}}
 
 	err := conf.AddSensor(sensor1)
 	if err != nil {
 		t.Log("No fail should happen here")
-		t.Error("Expected", nil, "got", *err)
+		t.Error("Expected", nil, "got", err)
+	} else {
+		t.Log("TestAddSensorShouldFail - OK: No error")
 	}
 
 	err = conf.AddSensor(sensor2)
 
 	if err == nil {
 		t.Error("Expected", "not nil", "got", err)
+	} else {
+		t.Log("TestAddSensorShouldFail - OK: ", err.Error())
 	}
 
 }
@@ -48,7 +56,7 @@ func TestAddSensorShouldOk(t *testing.T) {
 
 	sensorBack, err := conf.GetSensorByAddress(sensor1.Address)
 	if err != nil {
-		t.Error("Expected", nil, "from GetSensorByAddress with param", sensor1.Address, "got", *err)
+		t.Error("Expected", nil, "from GetSensorByAddress with param", sensor1.Address, "got", err)
 	}
 
 	if !reflect.DeepEqual(sensor1, *sensorBack) {
@@ -71,12 +79,14 @@ func TestGetSensorByAddressShouldFail(t *testing.T) {
 func TestGetSensorByAddressShouldOk(t *testing.T) {
 	conf := ConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
+	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+		RegisterAddress: 100, RegisterLength: 2}}
 
 	conf.AddSensor(sensor)
 
 	sensorBack, err := conf.GetSensorByAddress(sensor.Address)
 	if err != nil {
-		t.Error("Expected ", nil, "got", *err)
+		t.Error("Expected ", nil, "got", err)
 	}
 	if !reflect.DeepEqual(sensor, *sensorBack) {
 		t.Error("Expected", sensor, "got", sensorBack)
@@ -95,16 +105,20 @@ func TestRemoveSensorByAddressShouldFail(t *testing.T) {
 func TestRemoveSensorByAddressShouldOk(t *testing.T) {
 	conf := ConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
+	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+		RegisterAddress: 100, RegisterLength: 2}}
 	conf.AddSensor(sensor)
 	err := conf.RemoveSensorByAddress(sensor.Address)
 	if err != nil {
-		t.Error("Expected", "nil", "got", *err)
+		t.Error("Expected", "nil", "got", err)
 	}
 }
 
 func TestRemoveSensorShouldFail(t *testing.T) {
 	conf := ConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
+	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+		RegisterAddress: 100, RegisterLength: 2}}
 	err := conf.RemoveSensor(sensor)
 	if err == nil {
 		t.Error("Expected", "not nil", "got", err)
@@ -114,10 +128,12 @@ func TestRemoveSensorShouldFail(t *testing.T) {
 func TestRemoveSensorShouldOk(t *testing.T) {
 	conf := ConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
+	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+		RegisterAddress: 100, RegisterLength: 2}}
 	conf.AddSensor(sensor)
 	err := conf.RemoveSensor(sensor)
 	if err != nil {
-		t.Error("Expected", "nil", "got", *err)
+		t.Error("Expected", "nil", "got", err)
 	}
 }
 
@@ -129,7 +145,7 @@ func TestChangeSensorAddressShouldFail(t *testing.T) {
 	err := conf.ChangeSensorAddress(1, 2)
 
 	if err == nil {
-		t.Error("When no sensor added expected", "nil", "got", *err)
+		t.Error("When no sensor added expected", "nil", "got", err)
 	}
 
 	conf.AddSensor(sensor1)
@@ -158,6 +174,8 @@ func TestChangeSensorShouldOk(t *testing.T) {
 	conf := ConfigProvider{}.NewConfigProvider()
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}
+	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+		RegisterAddress: 100, RegisterLength: 2}}
 	conf.AddSensor(sensor)
 
 	sensor2 := common.Sensor{Address: 2, Description: "Test 2",
@@ -167,7 +185,7 @@ func TestChangeSensorShouldOk(t *testing.T) {
 	err := conf.ChangeSensor(sensor.Address, sensor2)
 
 	if err != nil {
-		t.Error("Expected", "nil", "got", *err)
+		t.Error("Expected", "nil", "got", err)
 	}
 
 	sensor1, _ := conf.GetSensorByAddress(sensor.Address)
