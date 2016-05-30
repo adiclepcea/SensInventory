@@ -20,8 +20,8 @@ func TestAddSensorShouldFail(t *testing.T) {
 	sensor2 := common.Sensor{}
 	sensor2.Address = 1
 	sensor2.Description = "Should fail"
-	sensor2.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
-		RegisterAddress: 100}}
+	sensor2.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}
 
 	err := conf.AddSensor(sensor1)
 	if err != nil {
@@ -109,6 +109,7 @@ func TestRemoveSensorByAddressShouldOk(t *testing.T) {
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}
+
 	conf.AddSensor(sensor)
 	err := conf.RemoveSensorByAddress(sensor.Address)
 	if err != nil {
@@ -121,6 +122,7 @@ func TestRemoveSensorShouldFail(t *testing.T) {
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Holding}}
+
 	err := conf.RemoveSensor(sensor)
 	if err == nil {
 		t.Error("Expected", "not nil", "got", err)
@@ -132,6 +134,7 @@ func TestRemoveSensorShouldOk(t *testing.T) {
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}
+
 	conf.AddSensor(sensor)
 	err := conf.RemoveSensor(sensor)
 	if err != nil {
