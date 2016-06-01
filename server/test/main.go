@@ -38,7 +38,7 @@ func main() {
 
 		readValues, e := mockServer.GetReading(nAddress)
 		if e != nil {
-			c.JSON(500, gin.H{"error": (*e).Error()})
+			c.JSON(500, gin.H{"error": (e).Error()})
 		} else {
 			c.JSON(200, readValues)
 		}
@@ -51,7 +51,7 @@ func main() {
 
 			err := conf.AddSensor(sensor)
 			if err != nil {
-				c.JSON(400, gin.H{"error": (*err).Error()})
+				c.JSON(400, gin.H{"error": (err).Error()})
 				return
 			}
 			c.JSON(201, nil)
@@ -77,13 +77,13 @@ func main() {
 			}
 			if sensor.Address != nAddress {
 				if err := conf.ChangeSensorAddress(sensor.Address, nAddress); err != nil {
-					c.JSON(500, gin.H{"error": (*err).Error()})
+					c.JSON(500, gin.H{"error": (err).Error()})
 					return
 				}
 			}
 			err := conf.ChangeSensor(nAddress, sensor)
 			if err != nil {
-				c.JSON(500, gin.H{"error": (*err).Error()})
+				c.JSON(500, gin.H{"error": (err).Error()})
 				return
 			}
 			c.JSON(200, nil)
@@ -106,29 +106,11 @@ func main() {
 		}
 
 		if err := conf.RemoveSensorByAddress(nAddress); err != nil {
-			c.JSON(500, gin.H{"error": (*err).Error()})
+			c.JSON(500, gin.H{"error": (err).Error()})
 			return
 		}
 		c.JSON(200, nil)
 	})
 
 	r.Run(":8081")
-	/*
-		readValues, err := mockServer.GetReading(1)
-
-		if err != nil {
-			fmt.Println((*err).Error())
-			return
-		}
-
-		fmt.Println(readValues)
-
-		readValues, err = mockServer.GetReading(2)
-
-		if err != nil {
-			fmt.Println((*err).Error())
-			return
-		}
-		fmt.Println(readValues)
-	*/
 }
