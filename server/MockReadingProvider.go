@@ -35,13 +35,13 @@ func (mockReadingProvider *MockReadingProvider) getRandValueForConfiguredValue(c
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 
-	if configuredValue.RegisterLength == 1 {
+	if configuredValue.RegisterType == common.Coil || configuredValue.RegisterType == common.InputDiscrete {
 		return r1.Intn(255)
-	} else if configuredValue.RegisterLength == 2 {
+	} else if configuredValue.RegisterType == common.Holding || configuredValue.RegisterType == common.Input {
 		return r1.Float32()
 	}
 
-	return 0 //for now we only provide mock values for integers - for single registry reads and for floats - for double registry reads
+	return 0 //for now we only provide mock values for integers - for bit registry reads and for floats - for double registry reads
 }
 
 //GetReading returns a mock random read from the sensor having address "address"
