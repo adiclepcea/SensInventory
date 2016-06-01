@@ -3,3 +3,4 @@ go:
   - 1.5
   - 1.6
 language: go
+script: go test -v ./... && go vet ./... && ./server/test.sh 
