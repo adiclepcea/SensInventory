@@ -63,6 +63,5 @@ The response would contain for a value of 23.56 read in 2016-04-03 12:10:50 :
 
 _ADDR 04 00 10 00 17 00 38 07 E0 00 04 00 03 00 0C 00 0A 00 32 CRC_
 
-(TODO - verify please)
 
 
