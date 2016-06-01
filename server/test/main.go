@@ -12,10 +12,10 @@ import (
 func main() {
 	conf := server.ConfigProvider{}.NewConfigProvider()
 	sensor1 := common.Sensor{Address: 1, Description: "", ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
-		RegisterAddress: 100, RegisterLength: 2}}}
+		RegisterAddress: 100, RegisterType: common.Holding}}}
 	sensor2 := common.Sensor{Address: 2, Description: "", ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{Name: "Sensor 2 Value 1",
-		RegisterAddress: 100, RegisterLength: 2}, common.ConfiguredValue{Name: "Sensor 2 value 2",
-		RegisterAddress: 102, RegisterLength: 1}}}
+		RegisterAddress: 100, RegisterType: common.Holding}, common.ConfiguredValue{Name: "Sensor 2 value 2",
+		RegisterAddress: 102, RegisterType: common.Holding}}}
 
 	conf.AddSensor(sensor1)
 	conf.AddSensor(sensor2)
