@@ -15,6 +15,27 @@ The reason I've decided to implement a new solution instead of using the allread
 Otherwise pymodbus is a much more complete and tested solution.
 
 ##Tools used
+
 You will need to install both [PySerial](https://github.com/pyserial) and [PyYaml](http://pyyaml.org/) for the application to work.
 * PySerial is used for communication with the 485 bus
 * PyYaml is used to read the configuration (config.yaml) for the slaves to simulate.
+
+##How to use it
+
+Clone it locally:
+
+```
+git clone https://github.com/adiclepcea/SensInventory.git
+```
+
+and go into the server/py_modbus_multiclient directory:
+
+```
+cd SensInventory/server/py_modbus_multiclient
+```
+
+and run:
+
+```
+python multiplemodbusslaves.py
+```

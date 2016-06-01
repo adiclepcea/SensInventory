@@ -7,47 +7,52 @@ import (
 	"github.com/adiclepcea/SensInventory/server/common"
 )
 
+//MockReadingProvider is a mock provider for reading sensors. Used in tests
 type MockReadingProvider struct {
+	IReadingProvider
 	Conf *ConfigProvider
 }
 
-func (this MockReadingProvider) NewReadingProvider(cp *ConfigProvider) IReadingProvider {
-	this.Conf = cp
+//NewReadingProvider returns a new reading provider having the configuration
+//provided by "cp"
+func (mockReadingProvider MockReadingProvider) NewReadingProvider(cp *ConfigProvider) *MockReadingProvider {
+	mockReadingProvider.Conf = cp
 
-	return &this
+	return &mockReadingProvider
 }
 
-func (this *MockReadingProvider) getRandValuesForSensor(sensor common.Sensor) []interface{} {
+func (mockReadingProvider *MockReadingProvider) getRandValuesForSensor(sensor common.Sensor) []interface{} {
 	rez := make([]interface{}, len(sensor.ConfiguredValues))
 	for i, confValue := range sensor.ConfiguredValues {
-		rez[i] = this.getRandValueForConfiguredValue(confValue)
+		rez[i] = mockReadingProvider.getRandValueForConfiguredValue(confValue)
 	}
 
 	return rez
 }
 
-func (this *MockReadingProvider) getRandValueForConfiguredValue(configuredValue common.ConfiguredValue) interface{} {
+func (mockReadingProvider *MockReadingProvider) getRandValueForConfiguredValue(configuredValue common.ConfiguredValue) interface{} {
 
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 
-	if configuredValue.RegisterLength == 1 {
+	if configuredValue.RegisterType == common.Coil || configuredValue.RegisterType == common.InputDiscrete {
 		return r1.Intn(255)
-	} else if configuredValue.RegisterLength == 2 {
+	} else if configuredValue.RegisterType == common.Holding || configuredValue.RegisterType == common.Input {
 		return r1.Float32()
 	}
 
-	return 0 //for now we only provide mock values for integers - for single registry reads and for floats - for double registry reads
+	return 0 //for now we only provide mock values for integers - for bit registry reads and for floats - for double registry reads
 }
 
-func (this *MockReadingProvider) GetReading(address int) (*common.Reading, *error) {
+//GetReading returns a mock random read from the sensor having address "address"
+func (mockReadingProvider *MockReadingProvider) GetReading(address int) (*common.Reading, error) {
 
-	sensor, err := this.Conf.GetSensorByAddress(address)
+	sensor, err := mockReadingProvider.Conf.GetSensorByAddress(address)
 
 	if err != nil {
 		return nil, err
 	}
 
-	reading := common.Reading{ReadSensor: *sensor, Time: time.Now(), ReadValues: this.getRandValuesForSensor(*sensor)}
+	reading := common.Reading{ReadSensor: *sensor, Time: time.Now(), ReadValues: mockReadingProvider.getRandValuesForSensor(*sensor)}
 	return &reading, nil
 }
