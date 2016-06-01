@@ -1,3 +1,6 @@
+master / [![Build Status](https://travis-ci.org/adiclepcea/SensInventory.svg?branch=master)](https://travis-ci.org/adiclepcea/SensInventory)
+develop / [![Build Status](https://travis-ci.org/adiclepcea/SensInventory.svg?branch=develop)](https://travis-ci.org/adiclepcea/SensInventory)
+
 # SensInventory
 ##System for keeping inventory based on sensors
 
