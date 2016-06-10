@@ -9,18 +9,18 @@ import (
 )
 
 func TestAddSensorShouldFail(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 
 	sensor1 := common.Sensor{}
 	sensor1.Address = 1
 	sensor1.Description = "Mock"
-	sensor1.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+	sensor1.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Holding}}
 
 	sensor2 := common.Sensor{}
 	sensor2.Address = 1
 	sensor2.Description = "Should fail"
-	sensor2.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+	sensor2.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}
 
 	err := conf.AddSensor(sensor1)
@@ -42,10 +42,10 @@ func TestAddSensorShouldFail(t *testing.T) {
 }
 
 func TestAddSensorShouldOk(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 
 	sensor1 := common.Sensor{Address: 2, Description: "sensor 1",
-		ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{
+		Registers: []common.Register{common.Register{
 			Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}}
 
 	err := conf.AddSensor(sensor1)
@@ -62,13 +62,13 @@ func TestAddSensorShouldOk(t *testing.T) {
 
 	if !reflect.DeepEqual(sensor1, *sensorBack) {
 		t.Error("Expected", sensor1.Address, ",", sensor1.Description, ",",
-			sensor1.ConfiguredValues, "got", sensorBack.Address, ",",
-			sensorBack.Description, ",", sensorBack.ConfiguredValues)
+			sensor1.Registers, "got", sensorBack.Address, ",",
+			sensorBack.Description, ",", sensorBack.Registers)
 	}
 }
 
 func TestGetSensorByAddressShouldFail(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 
 	_, err := conf.GetSensorByAddress(1)
 
@@ -79,9 +79,9 @@ func TestGetSensorByAddressShouldFail(t *testing.T) {
 }
 
 func TestGetSensorByAddressShouldOk(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
-	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Holding}}
 
 	conf.AddSensor(sensor)
@@ -96,7 +96,7 @@ func TestGetSensorByAddressShouldOk(t *testing.T) {
 }
 
 func TestRemoveSensorByAddressShouldFail(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 
 	err := conf.RemoveSensorByAddress(1)
 	if err == nil {
@@ -105,9 +105,9 @@ func TestRemoveSensorByAddressShouldFail(t *testing.T) {
 }
 
 func TestRemoveSensorByAddressShouldOk(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
-	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}
 
 	conf.AddSensor(sensor)
@@ -118,9 +118,9 @@ func TestRemoveSensorByAddressShouldOk(t *testing.T) {
 }
 
 func TestRemoveSensorShouldFail(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
-	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Holding}}
 
 	err := conf.RemoveSensor(sensor)
@@ -130,9 +130,9 @@ func TestRemoveSensorShouldFail(t *testing.T) {
 }
 
 func TestRemoveSensorShouldOk(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 	sensor := common.Sensor{Address: 1, Description: "test"}
-	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}
 
 	conf.AddSensor(sensor)
@@ -143,7 +143,7 @@ func TestRemoveSensorShouldOk(t *testing.T) {
 }
 
 func TestChangeSensorAddressShouldFail(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 	sensor1 := common.Sensor{Address: 1, Description: "test"}
 	sensor2 := common.Sensor{Address: 2, Description: "test"}
 
@@ -164,7 +164,7 @@ func TestChangeSensorAddressShouldFail(t *testing.T) {
 }
 
 func TestChangeSensorShouldFail(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}
 
@@ -176,15 +176,15 @@ func TestChangeSensorShouldFail(t *testing.T) {
 }
 
 func TestChangeSensorShouldOk(t *testing.T) {
-	conf := ConfigProvider{}.NewConfigProvider()
+	conf := DefaultConfigProvider{}.NewConfigProvider()
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}
-	sensor.ConfiguredValues = []common.ConfiguredValue{common.ConfiguredValue{
+	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Input}}
 	conf.AddSensor(sensor)
 
 	sensor2 := common.Sensor{Address: 2, Description: "Test 2",
-		ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{
+		Registers: []common.Register{common.Register{
 			Name: "test ReadValue", RegisterAddress: 100, RegisterType: common.Holding}}}
 
 	err := conf.ChangeSensor(sensor.Address, sensor2)
@@ -195,7 +195,7 @@ func TestChangeSensorShouldOk(t *testing.T) {
 
 	sensor1, _ := conf.GetSensorByAddress(sensor.Address)
 
-	if sensor1.Description != sensor2.Description || !reflect.DeepEqual(sensor1.ConfiguredValues, sensor2.ConfiguredValues) {
+	if sensor1.Description != sensor2.Description || !reflect.DeepEqual(sensor1.Registers, sensor2.Registers) {
 		t.Error("Expected", sensor2, "got", *sensor1)
 	}
 }

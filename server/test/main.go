@@ -10,11 +10,11 @@ import (
 )
 
 func main() {
-	conf := server.ConfigProvider{}.NewConfigProvider()
-	sensor1 := common.Sensor{Address: 1, Description: "", ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{Name: "test ReadValue",
+	conf := server.DefaultConfigProvider{}.NewConfigProvider()
+	sensor1 := common.Sensor{Address: 1, Description: "", Registers: []common.Register{common.Register{Name: "test ReadValue",
 		RegisterAddress: 100, RegisterType: common.Holding}}}
-	sensor2 := common.Sensor{Address: 2, Description: "", ConfiguredValues: []common.ConfiguredValue{common.ConfiguredValue{Name: "Sensor 2 Value 1",
-		RegisterAddress: 100, RegisterType: common.Holding}, common.ConfiguredValue{Name: "Sensor 2 value 2",
+	sensor2 := common.Sensor{Address: 2, Description: "", Registers: []common.Register{common.Register{Name: "Sensor 2 Value 1",
+		RegisterAddress: 100, RegisterType: common.Holding}, common.Register{Name: "Sensor 2 value 2",
 		RegisterAddress: 102, RegisterType: common.Holding}}}
 
 	conf.AddSensor(sensor1)
@@ -31,12 +31,12 @@ func main() {
 			c.JSON(400, gin.H{"error": "invalid address"})
 			return
 		}
-		if _, err := conf.GetSensorByAddress(nAddress); err != nil {
+		if _, err := conf.GetSensorByAddress(uint8(nAddress)); err != nil {
 			c.JSON(404, gin.H{"error": "Sensor address not registered"})
 			return
 		}
 
-		readValues, e := mockServer.GetReading(nAddress)
+		readValues, e := mockServer.GetReading(uint8(nAddress))
 		if e != nil {
 			c.JSON(500, gin.H{"error": (e).Error()})
 		} else {
@@ -75,13 +75,13 @@ func main() {
 				c.JSON(404, gin.H{"error": "Sensor address not registered"})
 				return
 			}
-			if sensor.Address != nAddress {
-				if err := conf.ChangeSensorAddress(sensor.Address, nAddress); err != nil {
+			if sensor.Address != uint8(nAddress) {
+				if err := conf.ChangeSensorAddress(sensor.Address, uint8(nAddress)); err != nil {
 					c.JSON(500, gin.H{"error": (err).Error()})
 					return
 				}
 			}
-			err := conf.ChangeSensor(nAddress, sensor)
+			err := conf.ChangeSensor(uint8(nAddress), sensor)
 			if err != nil {
 				c.JSON(500, gin.H{"error": (err).Error()})
 				return
@@ -100,12 +100,12 @@ func main() {
 			c.JSON(400, gin.H{"error": "invalid address"})
 			return
 		}
-		if _, err := conf.GetSensorByAddress(nAddress); err != nil {
+		if _, err := conf.GetSensorByAddress(uint8(nAddress)); err != nil {
 			c.JSON(404, gin.H{"error": "Sensor address not registered"})
 			return
 		}
 
-		if err := conf.RemoveSensorByAddress(nAddress); err != nil {
+		if err := conf.RemoveSensorByAddress(uint8(nAddress)); err != nil {
 			c.JSON(500, gin.H{"error": (err).Error()})
 			return
 		}
