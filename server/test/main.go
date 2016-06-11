@@ -11,7 +11,8 @@ import (
 )
 
 func main() {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 	sensor1 := common.Sensor{Address: 1, Description: "", Registers: []common.Register{common.Register{Name: "test ReadValue",
 		Location: 100, Type: common.Holding}}}
 	sensor2 := common.Sensor{Address: 2, Description: "", Registers: []common.Register{common.Register{Name: "Sensor 2 Value 1",

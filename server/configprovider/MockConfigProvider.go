@@ -18,12 +18,17 @@ type MockConfigProvider struct {
 }
 
 //NewConfigProvider creates a new ConfigProvider
-func (MockConfigProvider) NewConfigProvider(minAddress uint8, maxAddress uint8) *MockConfigProvider {
+func (MockConfigProvider) NewConfigProvider() *MockConfigProvider {
 	c := MockConfigProvider{}
-	c.MinAddress = minAddress
-	c.MaxAddress = maxAddress
+
 	c.Sensors = make(map[uint8]common.Sensor)
 	return &c
+}
+
+//SetAddressLimits adds the minimum and maximum limits for the sensor addreses
+func (configProvider *MockConfigProvider) SetAddressLimits(minAddress uint8, maxAddress uint8) {
+	configProvider.MinAddress = minAddress
+	configProvider.MaxAddress = maxAddress
 }
 
 //IsSensorAddressTaken checks to see if there is already a slave with
@@ -45,7 +50,7 @@ func (configProvider *MockConfigProvider) IsSensorValid(sensor common.Sensor) er
 	}
 
 	if len(sensor.Registers) == 0 {
-		err := errors.New("The sensor must have at least one configured address")
+		err := errors.New("The sensor must have at least one configured register")
 		log.Println(err.Error())
 		return err
 	}
@@ -74,7 +79,7 @@ func (configProvider *MockConfigProvider) AddSensor(sensor common.Sensor) error 
 //from the collection of sensors that the server interrogates
 func (configProvider *MockConfigProvider) RemoveSensorByAddress(address uint8) error {
 	if !configProvider.IsSensorAddressTaken(address) {
-		err := fmt.Errorf("No sensor with %d address is registered", address)
+		err := fmt.Errorf("No sensor with address %d is registered", address)
 		log.Println(err.Error())
 		return err
 	}
@@ -98,7 +103,7 @@ func (configProvider *MockConfigProvider) GetSensorByAddress(address uint8) (*co
 	var ok bool
 
 	if sensor, ok = configProvider.Sensors[address]; !ok {
-		err := fmt.Errorf("No sensor with %d address is registered", address)
+		err := fmt.Errorf("Getting sensor. No sensor with address %d is registered", address)
 		log.Println(err.Error())
 		return nil, err
 	}

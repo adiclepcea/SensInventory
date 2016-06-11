@@ -1,3 +1,4 @@
 server/test/test
 server/test/test.exe
 server/c_modbus_client/modbus_client
+coverage.txt

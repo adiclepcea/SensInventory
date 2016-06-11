@@ -32,8 +32,42 @@ func TestCalculateInt32ShouldOk(t *testing.T) {
 	}
 }
 
+func TestCalculateInt32ShouldWrongRegister(t *testing.T) {
+	rgf32, err := readgroups.ReadGroupInt32{}.NewReadGroup(1, 10)
+	if err != nil {
+		t.Error("No error expeccted when creating a ReadGroupFloat32")
+		t.FailNow()
+	}
+
+	sensor := common.Sensor{Address: 1}
+	sensor.Registers = []common.Register{
+		common.Register{Location: 8, Type: common.Coil},
+		common.Register{Location: 9, Type: common.Coil},
+		common.Register{Location: 10, Type: common.Coil},
+		common.Register{Location: 11, Type: common.Coil},
+		common.Register{Location: 12, Type: common.Coil},
+	}
+
+	reading := common.Reading{Sensor: 1, Type: common.Coil,
+		StartLocation: 8, Count: 5, ReadValues: []uint16{0, 0, 0xFFFF, 0xFFFF, 0}}
+
+	rez, err := rgf32.Calculate(reading)
+	if err == nil {
+		t.Error("Expected an error stating wrong register type got nil")
+		t.FailNow()
+	}
+	if err.Error() != "Reading type coil should be Holding or Input" {
+		t.Errorf("Wrong error type received: %s", err.Error())
+		t.FailNow()
+	}
+	if rez != nil {
+		t.Errorf("Expected nil response, got: %s", err.Error())
+		t.FailNow()
+	}
+}
+
 func TestCalculateInt32ShouldLocationToHigh(t *testing.T) {
-	rgf32, err := readgroups.ReadGroupUint32{}.NewReadGroup(1, 10)
+	rgf32, err := readgroups.ReadGroupInt32{}.NewReadGroup(1, 10)
 	if err != nil {
 		t.Error("No error expeccted when creating a ReadGroupFloat32")
 		t.FailNow()
@@ -60,7 +94,7 @@ func TestCalculateInt32ShouldLocationToHigh(t *testing.T) {
 }
 
 func TestCalculateInt32ShouldReadingToShort(t *testing.T) {
-	rgf32, err := readgroups.ReadGroupUint32{}.NewReadGroup(1, 10)
+	rgf32, err := readgroups.ReadGroupInt32{}.NewReadGroup(1, 10)
 	if err != nil {
 		t.Error("No error expeccted when creating a ReadGroupFloat32")
 		t.FailNow()

@@ -14,8 +14,8 @@ const defaultFileName = "config.json"
 type FileConfigProvider struct {
 	Sensors        map[uint8]common.Sensor `json:"Sensors"`
 	ReadGroups     []common.ReadGroup      `json:"ReadGroups"`
-	MinAddress     uint8
-	MaxAddress     uint8
+	MinAddress     uint8                   `json:"minAddress"`
+	MaxAddress     uint8                   `json:"maxAddress"`
 	FileConfigName string
 	ConfigProvider
 }

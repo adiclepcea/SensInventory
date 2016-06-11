@@ -21,7 +21,7 @@ const (
 	//calculated result types
 	Float32 = "float32"
 	Uint32  = "uint32"
-	Int32   = "int32" //not yet implemented
+	Int32   = "int32"
 )
 
 //Sensor represents a sensor with several configured registers

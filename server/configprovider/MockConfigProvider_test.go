@@ -10,7 +10,8 @@ import (
 )
 
 func TestAddSensorWithInvalidAddressShoudlFail(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 
 	sensor1 := common.Sensor{}
 	sensor1.Address = 33
@@ -27,7 +28,8 @@ func TestAddSensorWithInvalidAddressShoudlFail(t *testing.T) {
 }
 
 func TestAddSensorShouldFail(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 
 	sensor1 := common.Sensor{}
 	sensor1.Address = 1
@@ -62,7 +64,8 @@ func TestAddSensorShouldFail(t *testing.T) {
 }
 
 func TestAddSensorShouldOk(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 
 	sensor1 := common.Sensor{Address: 2, Description: "sensor 1",
 		Registers: []common.Register{common.Register{
@@ -91,7 +94,8 @@ func TestAddSensorShouldOk(t *testing.T) {
 }
 
 func TestGetSensorByAddressShouldFail(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 
 	_, err := conf.GetSensorByAddress(1)
 
@@ -103,7 +107,9 @@ func TestGetSensorByAddressShouldFail(t *testing.T) {
 }
 
 func TestGetSensorByAddressShouldOk(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
+
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Holding}}
@@ -126,7 +132,8 @@ func TestGetSensorByAddressShouldOk(t *testing.T) {
 }
 
 func TestRemoveSensorByAddressShouldFail(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 
 	err := conf.RemoveSensorByAddress(1)
 	if err == nil {
@@ -136,7 +143,9 @@ func TestRemoveSensorByAddressShouldFail(t *testing.T) {
 }
 
 func TestRemoveSensorByAddressShouldOk(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
+
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Input}}
@@ -150,7 +159,9 @@ func TestRemoveSensorByAddressShouldOk(t *testing.T) {
 }
 
 func TestRemoveSensorShouldFail(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
+
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Holding}}
@@ -163,7 +174,9 @@ func TestRemoveSensorShouldFail(t *testing.T) {
 }
 
 func TestRemoveSensorShouldOk(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
+
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Input}}
@@ -180,10 +193,33 @@ func TestRemoveSensorShouldOk(t *testing.T) {
 	}
 }
 
+func TestChangeSensorAddressShouldOk(t *testing.T) {
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
+	sensor1 := common.Sensor{Address: 1, Description: "test"}
+	sensor1.Registers = []common.Register{common.Register{
+		Name: "test ReadValue", Location: 100, Type: common.Input}}
+	err := conf.AddSensor(sensor1)
+	if err != nil {
+		t.Fatalf("No error expected when adding a sensor, got %s", err.Error())
+	}
+	err = conf.ChangeSensorAddress(1, 3)
+
+	if err != nil {
+		t.Error("When changing to an address unallocated expected", "no error", "got", err)
+		t.Fail()
+	}
+}
+
 func TestChangeSensorAddressShouldFail(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 	sensor1 := common.Sensor{Address: 1, Description: "test"}
 	sensor2 := common.Sensor{Address: 2, Description: "test"}
+	sensor1.Registers = []common.Register{common.Register{
+		Name: "test1 ReadValue", Location: 101, Type: common.Input}}
+	sensor2.Registers = []common.Register{common.Register{
+		Name: "test2 ReadValue", Location: 100, Type: common.Input}}
 
 	err := conf.ChangeSensorAddress(1, 2)
 
@@ -200,11 +236,16 @@ func TestChangeSensorAddressShouldFail(t *testing.T) {
 		t.Error("When address already exists expected", "not nil", "got", err)
 		t.Fail()
 	}
+	if err.Error() != "There is allready a sensor registered with address 2" {
+		t.Errorf("There is an unexpected error message: %s", err.Error())
+		t.Fail()
+	}
 
 }
 
 func TestChangeSensorShouldFail(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}
 
@@ -217,7 +258,8 @@ func TestChangeSensorShouldFail(t *testing.T) {
 }
 
 func TestChangeSensorShouldOk(t *testing.T) {
-	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}
 	sensor.Registers = []common.Register{common.Register{

@@ -4,7 +4,8 @@ import "github.com/adiclepcea/SensInventory/server/common"
 
 //ConfigProvider is a prototype for a configuration manager
 type ConfigProvider interface {
-	NewConfigProvider(minAddress uint8, maxAddress uint8, params ...string) *ConfigProvider
+	NewConfigProvider(params ...string) *ConfigProvider
+	SetAddressLimits(minAddress uint8, maxAddress uint8)
 	IsSensorAddressTaken(address uint8) bool
 	IsSensorValid(sensor common.Sensor) error
 	AddSensor(sensor common.Sensor) error
