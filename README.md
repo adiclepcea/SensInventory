@@ -1,5 +1,8 @@
-master / [![Build Status](https://travis-ci.org/adiclepcea/SensInventory.svg?branch=master)](https://travis-ci.org/adiclepcea/SensInventory)
-develop / [![Build Status](https://travis-ci.org/adiclepcea/SensInventory.svg?branch=develop)](https://travis-ci.org/adiclepcea/SensInventory)
+| Branch      | Build        | Coverage   |
+|-------------|:------------:|:----------:|
+| master      | [![Build Status](https://travis-ci.org/adiclepcea/SensInventory.svg?branch=master)](https://travis-ci.org/adiclepcea/SensInventory) | [![Codecov branch](https://img.shields.io/codecov/c/github/adiclepcea/SensInventory/master.svg)](https://codecov.io/gh/adiclepcea/SensInventory/branch/master)|
+| develop     | [![Build Status](https://travis-ci.org/adiclepcea/SensInventory.svg?branch=develop)](https://travis-ci.org/adiclepcea/SensInventory) | [![Codecov branch](https://img.shields.io/codecov/c/github/adiclepcea/SensInventory/develop.svg)](https://codecov.io/gh/adiclepcea/SensInventory/branch/develop)|
+
 
 # SensInventory
 ##System for keeping inventory based on sensors
@@ -9,7 +12,7 @@ develop / [![Build Status](https://travis-ci.org/adiclepcea/SensInventory.svg?br
 This system should read some sensors, for now it is all about weight sensors, and use the data for calculating the stock level for certain products.
 
 *Example 1:*
-You are responsible with delivering toners to your company (ok - you are the IT). Normally you have a minimum stock for each kind of toner you are using (let's say that for toner 38A you must have at least 3 toners. That is because the suppliers takes 3 weeks to deliver new ones and you normally need 1 per week). 
+You are responsible with delivering toners to your company (ok - you are the IT). Normally you have a minimum stock for each kind of toner you are using (let's say that for toner 38A you must have at least 3 toners. That is because the suppliers takes 3 weeks to deliver new ones and you normally need 1 per week).
 Using this system you could let the system tell you when you reached the limit.
 
 Perhaps you could eventually even make an automatic order to you supplier.
@@ -43,4 +46,3 @@ The applications should read the data from the sensor and provide further functi
 * Show stocks level
 * Add new stock parts
 * Send notification on low levels
-

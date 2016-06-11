@@ -5,47 +5,42 @@ import (
 	"time"
 
 	"github.com/adiclepcea/SensInventory/server/common"
+	"github.com/adiclepcea/SensInventory/server/configprovider"
 )
 
 //MockReadingProvider is a mock provider for reading sensors. Used in tests
 type MockReadingProvider struct {
-	IReadingProvider
-	Conf *ConfigProvider
+	Conf configprovider.MockConfigProvider
+	ReadingProvider
 }
 
 //NewReadingProvider returns a new reading provider having the configuration
 //provided by "cp"
-func (mockReadingProvider MockReadingProvider) NewReadingProvider(cp *ConfigProvider) *MockReadingProvider {
-	mockReadingProvider.Conf = cp
+func (mockReadingProvider MockReadingProvider) NewReadingProvider(cp *configprovider.MockConfigProvider) *MockReadingProvider {
+	mockReadingProvider.Conf = *cp
 
 	return &mockReadingProvider
 }
 
-func (mockReadingProvider *MockReadingProvider) getRandValuesForSensor(sensor common.Sensor) []interface{} {
-	rez := make([]interface{}, len(sensor.ConfiguredValues))
-	for i, confValue := range sensor.ConfiguredValues {
+func (mockReadingProvider *MockReadingProvider) getRandValuesForSensor(sensor common.Sensor) []uint16 {
+	rez := make([]uint16, len(sensor.Registers))
+	for i, confValue := range sensor.Registers {
 		rez[i] = mockReadingProvider.getRandValueForConfiguredValue(confValue)
 	}
 
 	return rez
 }
 
-func (mockReadingProvider *MockReadingProvider) getRandValueForConfiguredValue(configuredValue common.ConfiguredValue) interface{} {
+func (mockReadingProvider *MockReadingProvider) getRandValueForConfiguredValue(configuredValue common.Register) uint16 {
 
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 
-	if configuredValue.RegisterType == common.Coil || configuredValue.RegisterType == common.InputDiscrete {
-		return r1.Intn(255)
-	} else if configuredValue.RegisterType == common.Holding || configuredValue.RegisterType == common.Input {
-		return r1.Float32()
-	}
-
-	return 0 //for now we only provide mock values for integers - for bit registry reads and for floats - for double registry reads
+	return (uint16)(r1.Intn(255))
 }
 
 //GetReading returns a mock random read from the sensor having address "address"
-func (mockReadingProvider *MockReadingProvider) GetReading(address int) (*common.Reading, error) {
+func (mockReadingProvider *MockReadingProvider) GetReading(address uint8) (*common.Reading, error) {
 
 	sensor, err := mockReadingProvider.Conf.GetSensorByAddress(address)
 
@@ -53,6 +48,6 @@ func (mockReadingProvider *MockReadingProvider) GetReading(address int) (*common
 		return nil, err
 	}
 
-	reading := common.Reading{ReadSensor: *sensor, Time: time.Now(), ReadValues: mockReadingProvider.getRandValuesForSensor(*sensor)}
+	reading := common.Reading{Sensor: sensor.Address, Time: time.Now(), ReadValues: mockReadingProvider.getRandValuesForSensor(*sensor)}
 	return &reading, nil
 }
