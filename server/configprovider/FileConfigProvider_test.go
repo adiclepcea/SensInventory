@@ -1,6 +1,7 @@
 package configprovider_test
 
 import (
+	"os"
 	"testing"
 
 	"reflect"
@@ -9,8 +10,19 @@ import (
 	"github.com/adiclepcea/SensInventory/server/configprovider"
 )
 
-func TestMockAddSensorWithInvalidAddressShoudlFail(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+const testConfigFileName = "./testConfig.json"
+
+func deleteTestConfig(file string) {
+	os.Remove(file)
+}
+
+func TestFileAddSensorWithInvalidAddressShoudlFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor1 := common.Sensor{}
@@ -19,7 +31,7 @@ func TestMockAddSensorWithInvalidAddressShoudlFail(t *testing.T) {
 	sensor1.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Holding}}
 
-	err := conf.AddSensor(sensor1)
+	err = conf.AddSensor(sensor1)
 
 	if err == nil {
 		t.Error("There should be an error when adding a sensor with an invalid address")
@@ -27,8 +39,12 @@ func TestMockAddSensorWithInvalidAddressShoudlFail(t *testing.T) {
 	}
 }
 
-func TestMockAddSensorShouldFail(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileAddSensorShouldFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor1 := common.Sensor{}
@@ -43,7 +59,7 @@ func TestMockAddSensorShouldFail(t *testing.T) {
 	sensor2.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Input}}
 
-	err := conf.AddSensor(sensor1)
+	err = conf.AddSensor(sensor1)
 	if err != nil {
 		t.Log("No fail should happen here")
 		t.Error("Expected", nil, "got", err)
@@ -63,15 +79,19 @@ func TestMockAddSensorShouldFail(t *testing.T) {
 
 }
 
-func TestMockAddSensorShouldOk(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileAddSensorShouldOk(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor1 := common.Sensor{Address: 2, Description: "sensor 1",
 		Registers: []common.Register{common.Register{
 			Name: "test ReadValue", Location: 100, Type: common.Input}}}
 
-	err := conf.AddSensor(sensor1)
+	err = conf.AddSensor(sensor1)
 
 	if err != nil {
 		t.Error("Expected", nil, "got", err)
@@ -93,11 +113,15 @@ func TestMockAddSensorShouldOk(t *testing.T) {
 	}
 }
 
-func TestMockGetSensorByAddressShouldFail(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileGetSensorByAddressShouldFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
-	_, err := conf.GetSensorByAddress(1)
+	_, err = conf.GetSensorByAddress(1)
 
 	if err == nil {
 		t.Error("Expected", "not nil", "got", err)
@@ -106,15 +130,19 @@ func TestMockGetSensorByAddressShouldFail(t *testing.T) {
 
 }
 
-func TestMockGetSensorByAddressShouldOk(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileGetSensorByAddressShouldOk(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Holding}}
 
-	err := conf.AddSensor(sensor)
+	err = conf.AddSensor(sensor)
 	if err != nil {
 		t.Error("Expected", nil, "got", err)
 		t.FailNow()
@@ -131,19 +159,27 @@ func TestMockGetSensorByAddressShouldOk(t *testing.T) {
 	}
 }
 
-func TestMockRemoveSensorByAddressShouldFail(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileRemoveSensorByAddressShouldFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
-	err := conf.RemoveSensorByAddress(1)
+	err = conf.RemoveSensorByAddress(1)
 	if err == nil {
 		t.Error("Expected", "not nil", "got", err)
 		t.Fail()
 	}
 }
 
-func TestMockRemoveSensorByAddressShouldOk(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileRemoveSensorByAddressShouldOk(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "test"}
@@ -151,37 +187,45 @@ func TestMockRemoveSensorByAddressShouldOk(t *testing.T) {
 		Name: "test ReadValue", Location: 100, Type: common.Input}}
 
 	conf.AddSensor(sensor)
-	err := conf.RemoveSensorByAddress(sensor.Address)
+	err = conf.RemoveSensorByAddress(sensor.Address)
 	if err != nil {
 		t.Error("Expected", "nil", "got", err)
 		t.Fail()
 	}
 }
 
-func TestMockRemoveSensorShouldFail(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileRemoveSensorShouldFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Holding}}
 
-	err := conf.RemoveSensor(sensor)
+	err = conf.RemoveSensor(sensor)
 	if err == nil {
 		t.Error("Expected", "not nil", "got", err)
 		t.Fail()
 	}
 }
 
-func TestMockRemoveSensorShouldOk(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileRemoveSensorShouldOk(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Input}}
 
-	err := conf.AddSensor(sensor)
+	err = conf.AddSensor(sensor)
 	if err != nil {
 		t.Errorf("Expected no error when adding a new sensor, but got %s", err.Error())
 		t.FailNow()
@@ -193,13 +237,18 @@ func TestMockRemoveSensorShouldOk(t *testing.T) {
 	}
 }
 
-func TestMockChangeSensorAddressShouldOk(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileChangeSensorAddressShouldOk(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
+
 	sensor1 := common.Sensor{Address: 1, Description: "test"}
 	sensor1.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Input}}
-	err := conf.AddSensor(sensor1)
+	err = conf.AddSensor(sensor1)
 	if err != nil {
 		t.Fatalf("No error expected when adding a sensor, got %s", err.Error())
 	}
@@ -211,9 +260,14 @@ func TestMockChangeSensorAddressShouldOk(t *testing.T) {
 	}
 }
 
-func TestMockChangeSensorAddressShouldFail(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileFileChangeSensorAddressShouldFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
+
 	sensor1 := common.Sensor{Address: 1, Description: "test"}
 	sensor2 := common.Sensor{Address: 2, Description: "test"}
 	sensor1.Registers = []common.Register{common.Register{
@@ -221,7 +275,7 @@ func TestMockChangeSensorAddressShouldFail(t *testing.T) {
 	sensor2.Registers = []common.Register{common.Register{
 		Name: "test2 ReadValue", Location: 100, Type: common.Input}}
 
-	err := conf.ChangeSensorAddress(1, 2)
+	err = conf.ChangeSensorAddress(1, 2)
 
 	if err == nil {
 		t.Error("When no sensor added expected", "nil", "got", err)
@@ -243,13 +297,17 @@ func TestMockChangeSensorAddressShouldFail(t *testing.T) {
 
 }
 
-func TestMockChangeSensorShouldFail(t *testing.T) {
-	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileChangeSensorShouldFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}
 
-	err := conf.ChangeSensor(1, sensor)
+	err = conf.ChangeSensor(1, sensor)
 
 	if err == nil {
 		t.Error("Expected", "not nil", "got", err)
@@ -257,8 +315,12 @@ func TestMockChangeSensorShouldFail(t *testing.T) {
 	}
 }
 
-func TestMockChangeSensorShouldOk(t *testing.T) {
-	conf, err := configprovider.MockConfigProvider{}.NewConfigProvider()
+func TestFileChangeSensorShouldOk(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	defer deleteTestConfig(testConfigFileName)
 	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}

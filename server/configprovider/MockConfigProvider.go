@@ -18,27 +18,28 @@ type MockConfigProvider struct {
 }
 
 //NewConfigProvider creates a new ConfigProvider
-func (MockConfigProvider) NewConfigProvider() *MockConfigProvider {
+func (MockConfigProvider) NewConfigProvider() (*MockConfigProvider, error) {
 	c := MockConfigProvider{}
 
 	c.Sensors = make(map[uint8]common.Sensor)
-	return &c
+	return &c, nil
 }
 
 //SetAddressLimits adds the minimum and maximum limits for the sensor addreses
-func (configProvider *MockConfigProvider) SetAddressLimits(minAddress uint8, maxAddress uint8) {
+func (configProvider *MockConfigProvider) SetAddressLimits(minAddress uint8, maxAddress uint8) error {
 	configProvider.MinAddress = minAddress
 	configProvider.MaxAddress = maxAddress
+	return nil
 }
 
 //IsSensorAddressTaken checks to see if there is already a slave with
 //the passed address defined
-func (configProvider *MockConfigProvider) IsSensorAddressTaken(address uint8) bool {
+func (configProvider *MockConfigProvider) IsSensorAddressTaken(address uint8) (bool, error) {
 	if _, ok := configProvider.Sensors[address]; ok {
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 //IsSensorValid checks to see if the sensot passed in is valid
@@ -64,7 +65,11 @@ func (configProvider *MockConfigProvider) AddSensor(sensor common.Sensor) error 
 		log.Println((err).Error())
 		return err
 	}
-	if configProvider.IsSensorAddressTaken(sensor.Address) {
+	taken, err := configProvider.IsSensorAddressTaken(sensor.Address)
+	if err != nil {
+		return err
+	}
+	if taken {
 		err := fmt.Errorf("AddSensor. A sensor with address %d has already been registered", sensor.Address)
 		log.Println(err.Error())
 		return err
@@ -78,7 +83,11 @@ func (configProvider *MockConfigProvider) AddSensor(sensor common.Sensor) error 
 //RemoveSensorByAddress removes the sensor having the specified address
 //from the collection of sensors that the server interrogates
 func (configProvider *MockConfigProvider) RemoveSensorByAddress(address uint8) error {
-	if !configProvider.IsSensorAddressTaken(address) {
+	taken, err := configProvider.IsSensorAddressTaken(address)
+	if err != nil {
+		return err
+	}
+	if !taken {
 		err := fmt.Errorf("No sensor with address %d is registered", address)
 		log.Println(err.Error())
 		return err
@@ -118,8 +127,11 @@ func (configProvider *MockConfigProvider) ChangeSensorAddress(addressBefore uint
 	if err != nil {
 		return err
 	}
-
-	if configProvider.IsSensorAddressTaken(addressAfter) {
+	taken, err := configProvider.IsSensorAddressTaken(addressAfter)
+	if err != nil {
+		return err
+	}
+	if taken {
 		err := fmt.Errorf("There is allready a sensor registered with address %d", addressAfter)
 		log.Println(err.Error())
 		return err
