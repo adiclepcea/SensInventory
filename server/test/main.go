@@ -6,16 +6,17 @@ import (
 
 	"github.com/adiclepcea/SensInventory/server"
 	"github.com/adiclepcea/SensInventory/server/common"
+	"github.com/adiclepcea/SensInventory/server/configprovider"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	conf := server.DefaultConfigProvider{}.NewConfigProvider()
+	conf := configprovider.MockConfigProvider{}.NewConfigProvider(1, 32)
 	sensor1 := common.Sensor{Address: 1, Description: "", Registers: []common.Register{common.Register{Name: "test ReadValue",
-		RegisterAddress: 100, RegisterType: common.Holding}}}
+		Location: 100, Type: common.Holding}}}
 	sensor2 := common.Sensor{Address: 2, Description: "", Registers: []common.Register{common.Register{Name: "Sensor 2 Value 1",
-		RegisterAddress: 100, RegisterType: common.Holding}, common.Register{Name: "Sensor 2 value 2",
-		RegisterAddress: 102, RegisterType: common.Holding}}}
+		Location: 100, Type: common.Holding}, common.Register{Name: "Sensor 2 value 2",
+		Location: 102, Type: common.Holding}}}
 
 	conf.AddSensor(sensor1)
 	conf.AddSensor(sensor2)

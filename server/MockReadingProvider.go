@@ -5,17 +5,18 @@ import (
 	"time"
 
 	"github.com/adiclepcea/SensInventory/server/common"
+	"github.com/adiclepcea/SensInventory/server/configprovider"
 )
 
 //MockReadingProvider is a mock provider for reading sensors. Used in tests
 type MockReadingProvider struct {
-	Conf DefaultConfigProvider
+	Conf configprovider.MockConfigProvider
 	ReadingProvider
 }
 
 //NewReadingProvider returns a new reading provider having the configuration
 //provided by "cp"
-func (mockReadingProvider MockReadingProvider) NewReadingProvider(cp *DefaultConfigProvider) *MockReadingProvider {
+func (mockReadingProvider MockReadingProvider) NewReadingProvider(cp *configprovider.MockConfigProvider) *MockReadingProvider {
 	mockReadingProvider.Conf = *cp
 
 	return &mockReadingProvider

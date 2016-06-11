@@ -1,10 +1,10 @@
 package common
 
 //A sensor has an address and several registers
-//each register has a type and a loccation.
+//each register has a type and a location.
 //A reading is done by specifying a sensor address,
 //the type of reading (which implies the type of registers)
-//and the number of regsters to read
+//and the number of registers to read
 //You can group the values from several registers into a ReadGroup
 //This ReadGroup will transform the values from this sensors into a
 //resulting value
@@ -20,8 +20,8 @@ const (
 	InputDiscrete = "inputDiscrete"
 	//calculated result types
 	Float32 = "float32"
-	Long    = "long"
-	Byte    = "byte"
+	Uint32  = "uint32"
+	Int32   = "int32" //not yet implemented
 )
 
 //Sensor represents a sensor with several configured registers
@@ -34,15 +34,16 @@ type Sensor struct {
 
 //Register represents a register (coil, holding, input, input discrete)
 type Register struct {
-	Name            string `json:"name,omitempty"`
-	RegisterAddress uint16 `json:"registerAddress"`
-	RegisterType    string `json:"registerType"`
+	Name     string `json:"name,omitempty"`
+	Location uint16 `json:"location"`
+	Type     string `json:"type"`
 }
 
 //Reading represents a reading from a Sensor
 //and the representation of its values
 type Reading struct {
 	Sensor           uint8         `json:"sensor"`
+	Type             string        `json:"type"`
 	StartLocation    uint16        `json:"startLocation"`
 	Count            uint16        `json:"count"`
 	ReadValues       []uint16      `json:"readValues"`
@@ -53,14 +54,15 @@ type Reading struct {
 //ReadGroup uses the values of a group of registers
 //to calculate a resultant value
 type ReadGroup struct {
-	SensorAddress int    `json:"sensorAddress"`
-	Addresses     []int  `json:"addresses"`
+	SensorAddress uint8  `json:"sensorAddress"`
+	StartLocation uint16 `json:"startLocation"`
 	ResultType    string `json:"resultType"`
-	ReadGroupCalculation
+	ReadGroupWorker
 }
 
-//ReadGroupCalculation defines the methods needed to
-//obtain the value defined by a Grouping
-type ReadGroupCalculation interface {
+//ReadGroupWorker defines the methods needed to
+//initialize a ReadGroup and obtain the value defined by it
+type ReadGroupWorker interface {
 	Calculate(Reading) (interface{}, error)
+	NewReadGroup(uint8, uint16) (*ReadGroup, error)
 }

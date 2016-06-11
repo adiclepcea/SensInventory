@@ -1,10 +1,10 @@
-package server
+package configprovider
 
 import "github.com/adiclepcea/SensInventory/server/common"
 
 //ConfigProvider is a prototype for a configuration manager
 type ConfigProvider interface {
-	NewConfigProvider() *ConfigProvider
+	NewConfigProvider(minAddress uint8, maxAddress uint8, params ...string) *ConfigProvider
 	IsSensorAddressTaken(address uint8) bool
 	IsSensorValid(sensor common.Sensor) error
 	AddSensor(sensor common.Sensor) error
