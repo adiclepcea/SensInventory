@@ -3,6 +3,6 @@ go:
   - 1.5
   - 1.6
 language: go
-script: go test -v ./... && go vet ./... && ./server/testFmt.sh 
+script: go test -v ./... && go vet ./... && ./server/testFmt.sh && ./server/testCoverage.sh 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+        - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
