@@ -22,6 +22,7 @@ func (ReadGroupFloat32) NewReadGroup(sensorAddress uint8,
 	rgf32 := ReadGroupFloat32{common.ReadGroup{}}
 	rgf32.SensorAddress = sensorAddress
 	rgf32.StartLocation = startLocation
+	rgf32.ResultType = common.Float32
 	return &rgf32, nil
 }
 

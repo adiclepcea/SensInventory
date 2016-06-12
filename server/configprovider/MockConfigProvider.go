@@ -4,14 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/adiclepcea/SensInventory/server/common"
 )
 
 //MockConfigProvider contains the configuration for the server
 type MockConfigProvider struct {
-	Sensors    map[uint8]common.Sensor
-	ReadGroups []common.ReadGroup
+	Sensors    map[string]common.Sensor
 	MinAddress uint8
 	MaxAddress uint8
 	ConfigProvider
@@ -21,7 +21,7 @@ type MockConfigProvider struct {
 func (MockConfigProvider) NewConfigProvider() (*MockConfigProvider, error) {
 	c := MockConfigProvider{}
 
-	c.Sensors = make(map[uint8]common.Sensor)
+	c.Sensors = make(map[string]common.Sensor)
 	return &c, nil
 }
 
@@ -35,7 +35,7 @@ func (configProvider *MockConfigProvider) SetAddressLimits(minAddress uint8, max
 //IsSensorAddressTaken checks to see if there is already a slave with
 //the passed address defined
 func (configProvider *MockConfigProvider) IsSensorAddressTaken(address uint8) (bool, error) {
-	if _, ok := configProvider.Sensors[address]; ok {
+	if _, ok := configProvider.Sensors[strconv.Itoa(int(address))]; ok {
 		return true, nil
 	}
 
@@ -75,7 +75,7 @@ func (configProvider *MockConfigProvider) AddSensor(sensor common.Sensor) error 
 		return err
 	}
 
-	configProvider.Sensors[sensor.Address] = sensor
+	configProvider.Sensors[strconv.Itoa(int(sensor.Address))] = sensor
 
 	return nil
 }
@@ -93,7 +93,7 @@ func (configProvider *MockConfigProvider) RemoveSensorByAddress(address uint8) e
 		return err
 	}
 
-	delete(configProvider.Sensors, address)
+	delete(configProvider.Sensors, strconv.Itoa(int(address)))
 
 	return nil
 }
@@ -111,7 +111,7 @@ func (configProvider *MockConfigProvider) GetSensorByAddress(address uint8) (*co
 	var sensor common.Sensor
 	var ok bool
 
-	if sensor, ok = configProvider.Sensors[address]; !ok {
+	if sensor, ok = configProvider.Sensors[strconv.Itoa(int(address))]; !ok {
 		err := fmt.Errorf("Getting sensor. No sensor with address %d is registered", address)
 		log.Println(err.Error())
 		return nil, err
@@ -162,13 +162,13 @@ func (configProvider *MockConfigProvider) ChangeSensor(address uint8, after comm
 
 	sensorBefore.Description = after.Description
 	sensorBefore.Registers = after.Registers
-	configProvider.Sensors[sensorBefore.Address] = *sensorBefore
+	configProvider.Sensors[strconv.Itoa(int(sensorBefore.Address))] = *sensorBefore
 
 	return nil
 
 }
 
 //GetSensors returns a map of the sensor addresses mapped to the sensors themselves
-func (configProvider *MockConfigProvider) GetSensors() map[uint8]common.Sensor {
+func (configProvider *MockConfigProvider) GetSensors() map[string]common.Sensor {
 	return configProvider.Sensors
 }

@@ -16,7 +16,6 @@ const defaultFileName = "./config.json"
 //FileConfigProvider contains the configuration for the server
 type FileConfigProvider struct {
 	Sensors        map[string]common.Sensor `json:"Sensors"`
-	ReadGroups     []common.ReadGroup       `json:"ReadGroups"`
 	MinAddress     uint8                    `json:"minAddress"`
 	MaxAddress     uint8                    `json:"maxAddress"`
 	FileConfigName string                   `json:"-"`
@@ -138,8 +137,7 @@ func (configProvider *FileConfigProvider) AddSensor(sensor common.Sensor) error 
 	}
 
 	configProvider.Sensors[strconv.Itoa(int(sensor.Address))] = sensor
-
-	return nil
+	return configProvider.Save()
 }
 
 //RemoveSensorByAddress removes the sensor having the specified address

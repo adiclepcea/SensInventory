@@ -29,7 +29,7 @@ type Sensor struct {
 	Address     uint8       `json:"address"` //485 address
 	Description string      `json:"description,omitempty"`
 	Registers   []Register  `json:"registers"`
-	ReadGroups  []ReadGroup `json:"readGroup"`
+	ReadGroups  []ReadGroup `json:"readGroups"`
 }
 
 //Register represents a register (coil, holding, input, input discrete)

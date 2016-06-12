@@ -351,3 +351,47 @@ func TestFileChangeSensorShouldOk(t *testing.T) {
 		t.Error("Expected", sensor2, "got", *sensor1)
 	}
 }
+
+func TestFileGetSensors(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+	//defer deleteTestConfig(testConfigFileName)
+	conf.SetAddressLimits(1, 32)
+	sensor1 := common.Sensor{Address: 1, Description: "Test"}
+	sensor1.Registers = []common.Register{common.Register{
+		Name: "test ReadValue", Location: 100, Type: common.Input}}
+	sensor2 := common.Sensor{Address: 2, Description: "Test"}
+	sensor2.Registers = []common.Register{common.Register{
+		Name: "test ReadValue", Location: 100, Type: common.Coil}}
+
+	err = conf.AddSensor(sensor1)
+	if err != nil {
+		t.Fatalf("No error extepected while adding sensor, got %s", err.Error())
+	}
+	err = conf.AddSensor(sensor2)
+	if err != nil {
+		t.Fatalf("No error extepected while adding sensor, got %s", err.Error())
+	}
+
+	sensors := conf.GetSensors()
+	if len(sensors) != 2 {
+		t.Fatalf("Should have 2 sensors, got: %d", len(sensors))
+	}
+
+	val, ok := sensors["1"]
+	if !ok {
+		t.Fatal("Should have sensor with address 1, got:nil")
+	}
+	if val.Address != 1 {
+		t.Fatalf("Sensor shoudl have address 1, got:%d", val.Address)
+	}
+	val, ok = sensors["2"]
+	if !ok {
+		t.Fatal("Should have sensor with address 2, got:nil")
+	}
+	if val.Address != 2 {
+		t.Fatalf("Sensor shoudl have address 2, got:%d", val.Address)
+	}
+}

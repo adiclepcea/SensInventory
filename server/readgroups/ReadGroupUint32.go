@@ -19,6 +19,7 @@ func (ReadGroupUint32) NewReadGroup(sensorAddress uint8,
 	rgf32 := ReadGroupUint32{common.ReadGroup{}}
 	rgf32.SensorAddress = sensorAddress
 	rgf32.StartLocation = startLocation
+	rgf32.ResultType = common.Uint32
 	return &rgf32, nil
 }
 

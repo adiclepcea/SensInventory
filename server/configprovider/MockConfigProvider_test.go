@@ -258,14 +258,14 @@ func TestMockChangeSensorShouldFail(t *testing.T) {
 }
 
 func TestMockChangeSensorShouldOk(t *testing.T) {
-	conf, err := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
 	conf.SetAddressLimits(1, 32)
 
 	sensor := common.Sensor{Address: 1, Description: "Test"}
 	sensor.Registers = []common.Register{common.Register{
 		Name: "test ReadValue", Location: 100, Type: common.Input}}
 
-	err = conf.AddSensor(sensor)
+	err := conf.AddSensor(sensor)
 
 	if err != nil {
 		t.Error("Expected no error when adding a new sensor", "got", err)
@@ -287,5 +287,46 @@ func TestMockChangeSensorShouldOk(t *testing.T) {
 
 	if sensor1.Description != sensor2.Description || !reflect.DeepEqual(sensor1.Registers, sensor2.Registers) {
 		t.Error("Expected", sensor2, "got", *sensor1)
+	}
+}
+
+func TestMockGetSensors(t *testing.T) {
+	conf, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
+	conf.SetAddressLimits(1, 32)
+
+	sensor1 := common.Sensor{Address: 1, Description: "Test"}
+	sensor1.Registers = []common.Register{common.Register{
+		Name: "test ReadValue", Location: 100, Type: common.Input}}
+	sensor2 := common.Sensor{Address: 2, Description: "Test"}
+	sensor2.Registers = []common.Register{common.Register{
+		Name: "test ReadValue", Location: 100, Type: common.Coil}}
+
+	err := conf.AddSensor(sensor1)
+	if err != nil {
+		t.Fatalf("No error extepected while adding sensor, got %s", err.Error())
+	}
+	err = conf.AddSensor(sensor2)
+	if err != nil {
+		t.Fatalf("No error extepected while adding sensor, got %s", err.Error())
+	}
+
+	sensors := conf.GetSensors()
+	if len(sensors) != 2 {
+		t.Fatalf("Should have 2 sensors, got: %d", len(sensors))
+	}
+
+	val, ok := sensors["1"]
+	if !ok {
+		t.Fatal("Should have sensor with address 1, got:nil")
+	}
+	if val.Address != 1 {
+		t.Fatalf("Sensor shoudl have address 1, got:%d", val.Address)
+	}
+	val, ok = sensors["2"]
+	if !ok {
+		t.Fatal("Should have sensor with address 2, got:nil")
+	}
+	if val.Address != 2 {
+		t.Fatalf("Sensor shoudl have address 2, got:%d", val.Address)
 	}
 }
