@@ -7,13 +7,16 @@ import (
 )
 
 //PersistenceProvider is the prototype to be
-//implemented when creting a persistence provider
+//implemented when creating a persistence provider
 type PersistenceProvider interface {
-	SaveSensorReading(common.Reading)
-	GetSensorReading(uint8, time.Time)
-	GetSensorReadingsInPeriod(uint8, time.Time, time.Time)
-	GetAllReadingsInPeriod(time.Time, time.Time)
-	DeleteSensorReading(uint8, time.Time)
-	DeleteSensorReadingsInPeriod(uint8, time.Time, time.Time)
-	DeleteAllReadingsInPeriod(time.Time, time.Time)
+	NewPersistenceProvider(params ...string) (PersistenceProvider, error)
+	SaveSensorReading(common.Reading) error
+	GetSensorReading(uint8, time.Time) (*common.Reading, error)
+	GetSensorReadingsInPeriod(uint8, time.Time, time.Time) ([]common.Reading, error)
+	GetSensorReadingCountInPeriod(uint8, time.Time, time.Time) (uint, error)
+	GetAllReadingsInPeriod(time.Time, time.Time) (*[]common.Reading, error)
+	GetAllReadingsCountInPeriod(time.Time, time.Time) (uint, error)
+	DeleteSensorReading(uint8, time.Time) error
+	DeleteSensorReadingsInPeriod(uint8, time.Time, time.Time) error
+	DeleteAllReadingsInPeriod(time.Time, time.Time) error
 }

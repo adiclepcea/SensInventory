@@ -8,11 +8,11 @@ package common
 //You can group the values from several registers into a ReadGroup
 //This ReadGroup will transform the values from this sensors into a
 //resulting value
-import "time"
 
 //Constants for register types and
 //calculated result types
 const (
+	TimeFormat = "2006-01-02T15:04:05"
 	//register types
 	Coil          = "coil"
 	Input         = "input"
@@ -42,13 +42,19 @@ type Register struct {
 //Reading represents a reading from a Sensor
 //and the representation of its values
 type Reading struct {
-	Sensor           uint8         `json:"sensor"`
-	Type             string        `json:"type"`
-	StartLocation    uint16        `json:"startLocation"`
-	Count            uint16        `json:"count"`
-	ReadValues       []uint16      `json:"readValues"`
-	Time             time.Time     `json:"time"`
-	CalculatedValues []interface{} `json:"calculatedValues"`
+	Sensor           uint8                  `json:"sensor"`
+	Type             string                 `json:"type"`
+	StartLocation    uint16                 `json:"startLocation"`
+	Count            uint16                 `json:"count"`
+	ReadValues       []uint16               `json:"readValues"`
+	Time             string                 `json:"time"`
+	CalculatedValues map[string]interface{} `json:"calculatedValues"`
+}
+
+//InitCalculatedValues initiates the map that will hold the calculated values
+//for a reading
+func (reading *Reading) InitCalculatedValues() {
+	reading.CalculatedValues = make(map[string]interface{})
 }
 
 //ReadGroup uses the values of a group of registers
@@ -63,6 +69,6 @@ type ReadGroup struct {
 //ReadGroupWorker defines the methods needed to
 //initialize a ReadGroup and obtain the value defined by it
 type ReadGroupWorker interface {
-	Calculate(Reading) (interface{}, error)
+	Calculate(*Reading) (interface{}, error)
 	NewReadGroup(uint8, uint16) (*ReadGroup, error)
 }

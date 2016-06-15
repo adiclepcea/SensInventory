@@ -55,6 +55,9 @@ func (rgf32 ReadGroupUint32) Calculate(reading common.Reading) (interface{}, err
 	xa := uint32(reading.ReadValues[poz1])
 	xb := uint32(reading.ReadValues[poz1+1])
 	x = (xa << 16) + xb
-
+	if reading.CalculatedValues == nil {
+		reading.InitCalculatedValues()
+	}
+	reading.CalculatedValues[fmt.Sprintf("%d", rgf32.StartLocation)] = x
 	return x, nil
 }
