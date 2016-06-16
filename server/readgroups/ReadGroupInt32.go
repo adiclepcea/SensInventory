@@ -19,6 +19,7 @@ func (ReadGroupInt32) NewReadGroup(sensorAddress uint8,
 	rgf32 := ReadGroupInt32{common.ReadGroup{}}
 	rgf32.SensorAddress = sensorAddress
 	rgf32.StartLocation = startLocation
+	rgf32.ResultType = common.Int32
 	return &rgf32, nil
 }
 
@@ -54,6 +55,9 @@ func (rgf32 ReadGroupInt32) Calculate(reading common.Reading) (interface{}, erro
 	xa := uint32(reading.ReadValues[poz1])
 	xb := uint32(reading.ReadValues[poz1+1])
 	x = int32((xa << 16) + xb)
-
+	if reading.CalculatedValues == nil {
+		reading.InitCalculatedValues()
+	}
+	reading.CalculatedValues[fmt.Sprintf("%d", rgf32.StartLocation)] = x
 	return x, nil
 }

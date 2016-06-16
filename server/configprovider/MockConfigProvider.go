@@ -4,36 +4,42 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/adiclepcea/SensInventory/server/common"
 )
 
 //MockConfigProvider contains the configuration for the server
 type MockConfigProvider struct {
-	Sensors    map[uint8]common.Sensor
-	ReadGroups []common.ReadGroup
+	Sensors    map[string]common.Sensor
 	MinAddress uint8
 	MaxAddress uint8
 	ConfigProvider
 }
 
 //NewConfigProvider creates a new ConfigProvider
-func (MockConfigProvider) NewConfigProvider(minAddress uint8, maxAddress uint8) *MockConfigProvider {
+func (MockConfigProvider) NewConfigProvider() (*MockConfigProvider, error) {
 	c := MockConfigProvider{}
-	c.MinAddress = minAddress
-	c.MaxAddress = maxAddress
-	c.Sensors = make(map[uint8]common.Sensor)
-	return &c
+
+	c.Sensors = make(map[string]common.Sensor)
+	return &c, nil
+}
+
+//SetAddressLimits adds the minimum and maximum limits for the sensor addreses
+func (configProvider *MockConfigProvider) SetAddressLimits(minAddress uint8, maxAddress uint8) error {
+	configProvider.MinAddress = minAddress
+	configProvider.MaxAddress = maxAddress
+	return nil
 }
 
 //IsSensorAddressTaken checks to see if there is already a slave with
 //the passed address defined
-func (configProvider *MockConfigProvider) IsSensorAddressTaken(address uint8) bool {
-	if _, ok := configProvider.Sensors[address]; ok {
-		return true
+func (configProvider *MockConfigProvider) IsSensorAddressTaken(address uint8) (bool, error) {
+	if _, ok := configProvider.Sensors[strconv.Itoa(int(address))]; ok {
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 //IsSensorValid checks to see if the sensot passed in is valid
@@ -45,7 +51,7 @@ func (configProvider *MockConfigProvider) IsSensorValid(sensor common.Sensor) er
 	}
 
 	if len(sensor.Registers) == 0 {
-		err := errors.New("The sensor must have at least one configured address")
+		err := errors.New("The sensor must have at least one configured register")
 		log.Println(err.Error())
 		return err
 	}
@@ -59,13 +65,17 @@ func (configProvider *MockConfigProvider) AddSensor(sensor common.Sensor) error 
 		log.Println((err).Error())
 		return err
 	}
-	if configProvider.IsSensorAddressTaken(sensor.Address) {
+	taken, err := configProvider.IsSensorAddressTaken(sensor.Address)
+	if err != nil {
+		return err
+	}
+	if taken {
 		err := fmt.Errorf("AddSensor. A sensor with address %d has already been registered", sensor.Address)
 		log.Println(err.Error())
 		return err
 	}
 
-	configProvider.Sensors[sensor.Address] = sensor
+	configProvider.Sensors[strconv.Itoa(int(sensor.Address))] = sensor
 
 	return nil
 }
@@ -73,13 +83,17 @@ func (configProvider *MockConfigProvider) AddSensor(sensor common.Sensor) error 
 //RemoveSensorByAddress removes the sensor having the specified address
 //from the collection of sensors that the server interrogates
 func (configProvider *MockConfigProvider) RemoveSensorByAddress(address uint8) error {
-	if !configProvider.IsSensorAddressTaken(address) {
-		err := fmt.Errorf("No sensor with %d address is registered", address)
+	taken, err := configProvider.IsSensorAddressTaken(address)
+	if err != nil {
+		return err
+	}
+	if !taken {
+		err := fmt.Errorf("No sensor with address %d is registered", address)
 		log.Println(err.Error())
 		return err
 	}
 
-	delete(configProvider.Sensors, address)
+	delete(configProvider.Sensors, strconv.Itoa(int(address)))
 
 	return nil
 }
@@ -97,8 +111,8 @@ func (configProvider *MockConfigProvider) GetSensorByAddress(address uint8) (*co
 	var sensor common.Sensor
 	var ok bool
 
-	if sensor, ok = configProvider.Sensors[address]; !ok {
-		err := fmt.Errorf("No sensor with %d address is registered", address)
+	if sensor, ok = configProvider.Sensors[strconv.Itoa(int(address))]; !ok {
+		err := fmt.Errorf("Getting sensor. No sensor with address %d is registered", address)
 		log.Println(err.Error())
 		return nil, err
 	}
@@ -113,8 +127,11 @@ func (configProvider *MockConfigProvider) ChangeSensorAddress(addressBefore uint
 	if err != nil {
 		return err
 	}
-
-	if configProvider.IsSensorAddressTaken(addressAfter) {
+	taken, err := configProvider.IsSensorAddressTaken(addressAfter)
+	if err != nil {
+		return err
+	}
+	if taken {
 		err := fmt.Errorf("There is allready a sensor registered with address %d", addressAfter)
 		log.Println(err.Error())
 		return err
@@ -145,13 +162,13 @@ func (configProvider *MockConfigProvider) ChangeSensor(address uint8, after comm
 
 	sensorBefore.Description = after.Description
 	sensorBefore.Registers = after.Registers
-	configProvider.Sensors[sensorBefore.Address] = *sensorBefore
+	configProvider.Sensors[strconv.Itoa(int(sensorBefore.Address))] = *sensorBefore
 
 	return nil
 
 }
 
 //GetSensors returns a map of the sensor addresses mapped to the sensors themselves
-func (configProvider *MockConfigProvider) GetSensors() map[uint8]common.Sensor {
+func (configProvider *MockConfigProvider) GetSensors() map[string]common.Sensor {
 	return configProvider.Sensors
 }

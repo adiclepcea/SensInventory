@@ -22,11 +22,12 @@ func (ReadGroupFloat32) NewReadGroup(sensorAddress uint8,
 	rgf32 := ReadGroupFloat32{common.ReadGroup{}}
 	rgf32.SensorAddress = sensorAddress
 	rgf32.StartLocation = startLocation
+	rgf32.ResultType = common.Float32
 	return &rgf32, nil
 }
 
 //Calculate performs the transformation between registries values and Float32
-func (rgf32 ReadGroupFloat32) Calculate(reading common.Reading) (interface{}, error) {
+func (rgf32 ReadGroupFloat32) Calculate(reading *common.Reading) (interface{}, error) {
 	log.Printf("SensorAddress %d \n StartLocation %d\n", rgf32.SensorAddress, rgf32.StartLocation)
 	if reading.StartLocation > rgf32.StartLocation {
 		log.Printf("Reading start location (%d > %d)",
@@ -58,7 +59,10 @@ func (rgf32 ReadGroupFloat32) Calculate(reading common.Reading) (interface{}, er
 	byte3 := uint32(reading.ReadValues[poz1] & 0xFF)
 	byte4 := uint32((reading.ReadValues[poz1] & 0xFF00) / 0xFF)
 	x = (byte1 << 24) + (byte2 << 16) + (byte3 << 8) + byte4
-	log.Printf("Value x=%x", x)
 
+	if reading.CalculatedValues == nil {
+		reading.InitCalculatedValues()
+	}
+	reading.CalculatedValues[fmt.Sprintf("%d", rgf32.StartLocation)] = math.Float32frombits(x)
 	return math.Float32frombits(x), nil
 }
