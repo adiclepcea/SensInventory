@@ -55,13 +55,11 @@ func (configProvider *FileConfigProvider) LoadConfig() (bool, error) {
 		return false, err
 	}
 	defer configFile.Close()
-	fi, err := configFile.Stat()
+	_, err = configFile.Stat()
 	if err != nil {
 		return false, err
 	}
-	if fi.Size() == 0 {
-		return false, nil
-	}
+
 	jsonParser := json.NewDecoder(configFile)
 	if err = jsonParser.Decode(&configProvider); err != nil {
 		return false, err
@@ -103,7 +101,7 @@ func (configProvider *FileConfigProvider) IsSensorAddressTaken(address uint8) (b
 	return false, nil
 }
 
-//IsSensorValid checks to see if the sensot passed in is valid
+//IsSensorValid checks to see if the sensor passed in is valid
 func (configProvider *FileConfigProvider) IsSensorValid(sensor common.Sensor) error {
 	if sensor.Address < configProvider.MinAddress || sensor.Address > configProvider.MaxAddress {
 		err := fmt.Errorf("The sensor adresses must be between %d and %d", configProvider.MinAddress, configProvider.MaxAddress)
@@ -112,7 +110,7 @@ func (configProvider *FileConfigProvider) IsSensorValid(sensor common.Sensor) er
 	}
 
 	if len(sensor.Registers) == 0 {
-		err := errors.New("The sensor must have at least one configured address")
+		err := errors.New("The sensor must have at least one configured register")
 		log.Println(err.Error())
 		return err
 	}

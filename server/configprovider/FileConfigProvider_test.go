@@ -16,6 +16,59 @@ func deleteTestConfig(file string) {
 	os.Remove(file)
 }
 
+func TestLoadConfigShouldFail(t *testing.T) {
+	notGoodFileName := "./norights.json"
+	file, err := os.Create(notGoodFileName)
+	if err != nil {
+		t.Skipf("Could not create the file, %s\n", err.Error())
+	}
+	defer os.Remove(notGoodFileName)
+	file.WriteString("test")
+	file.Close()
+	err = os.Chmod(notGoodFileName, 0222)
+	if err != nil {
+		t.Skip("Could not change the rights for the file")
+	}
+	_, err = configprovider.FileConfigProvider{}.NewConfigProvider(notGoodFileName)
+	if err == nil {
+		t.Fatal("Expected error when using an inaccesible file. Got nil")
+	}
+
+	invalidFile := "./invalid.json"
+	file, err = os.Create(invalidFile)
+	file.WriteString("Invalid json {")
+	if err != nil {
+		t.Skipf("Could not create an empty file", err.Error())
+	}
+	defer os.Remove(invalidFile)
+	file.Close()
+	_, err = configprovider.FileConfigProvider{}.NewConfigProvider(invalidFile)
+	if err == nil {
+		t.Fatal("Expected error when using an invalid json file. Got nil")
+	}
+}
+
+func TestFileAddSensorWithNoRegistersShouldFail(t *testing.T) {
+	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
+	if err != nil {
+		t.Fatalf("There should be no error when creating a FileConfigProvider, got %s", err.Error())
+	}
+
+	defer deleteTestConfig(testConfigFileName)
+	conf.SetAddressLimits(1, 32)
+
+	sensor1 := common.Sensor{}
+	sensor1.Address = 33
+	sensor1.Description = "Mock"
+
+	err = conf.AddSensor(sensor1)
+
+	if err == nil {
+		t.Error("There should be an error when adding a sensor with an no registers")
+		t.Fail()
+	}
+}
+
 func TestFileAddSensorWithInvalidAddressShoudlFail(t *testing.T) {
 	conf, err := configprovider.FileConfigProvider{}.NewConfigProvider(testConfigFileName)
 	if err != nil {
