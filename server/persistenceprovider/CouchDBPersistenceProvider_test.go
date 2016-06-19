@@ -447,7 +447,7 @@ func TestDeleteSensorReadingsInPeriod(t *testing.T) {
 	}
 }
 
-func TestDeleterReadingsInPeriod(t *testing.T) {
+func TestDeleteReadingsInPeriod(t *testing.T) {
 	cdbp, err := ConnectToCouch()
 	if err != nil {
 		t.Fatal("No error Expected when connecting to couchdb, got ", err.Error())
@@ -459,26 +459,23 @@ func TestDeleterReadingsInPeriod(t *testing.T) {
 	if err != nil {
 		t.Fatal("No error expected when getting time from string")
 	}
-
+	defer cdbp.DeleteDB()
 	err = cdbp.SaveSensorReading(reading1)
 	cdbp.SaveSensorReading(reading2)
 	cdbp.SaveSensorReading(reading3)
 
 	if err != nil {
-		cdbp.DeleteDB()
 		t.Fatal("No error expected when saving a reading, got ", err.Error())
 	}
 
 	err = cdbp.DeleteAllReadingsInPeriod(startTime, endTime)
 
 	if err != nil {
-		cdbp.DeleteDB()
 		t.Fatalf("No error expected while deleting an existing reading. Got", err.Error())
 	}
 
 	err = cdbp.DeleteAllReadingsInPeriod(startTime, endTime)
 	if err == nil {
-		cdbp.DeleteDB()
 		t.Fatalf("Error expected while deleting an inexistent reading. Got", err)
 	}
 

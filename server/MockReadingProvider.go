@@ -48,6 +48,7 @@ func (mockReadingProvider *MockReadingProvider) GetReading(address uint8) (*comm
 		return nil, err
 	}
 
-	reading := common.Reading{Sensor: sensor.Address, Time: time.Now().Format(common.TimeFormat), ReadValues: mockReadingProvider.getRandValuesForSensor(*sensor)}
+	reading := common.Reading{Sensor: sensor.Address, Time: time.Now().Format(common.TimeFormat),
+		ReadValues: mockReadingProvider.getRandValuesForSensor(*sensor)}
 	return &reading, nil
 }

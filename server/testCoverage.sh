@@ -12,3 +12,6 @@ for d in $(find ./* -maxdepth 10 -type d); do
         fi
     fi
 done
+
+cd ./server/persistenceprovider
+./testCouchDBDocker.sh
