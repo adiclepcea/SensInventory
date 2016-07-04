@@ -49,7 +49,7 @@ type couchDBResult struct {
 
 //NewPersistenceProvider creates a new persistence
 //provider that will save data in CouchDB
-func (CouchDBPersistenceProvider) NewPersistenceProvider(params ...string) (*CouchDBPersistenceProvider, error) {
+func (CouchDBPersistenceProvider) NewPersistenceProvider(params ...string) (PersistenceProvider, error) {
 	if len(params) == 0 {
 		return nil, fmt.Errorf("No parameters given for connection")
 	}
@@ -223,7 +223,7 @@ func (couchProvider *CouchDBPersistenceProvider) GetSensorReading(sensorAddress 
 //GetSensorReadingsInPeriod returns the readings for a sensor in a given period
 func (couchProvider *CouchDBPersistenceProvider) GetSensorReadingsInPeriod(
 	sensorAddress uint8, startTime time.Time,
-	endTime time.Time) (*[]common.Reading, error) {
+	endTime time.Time) ([]common.Reading, error) {
 
 	query := getViewQueryStringSensorInPeriod(strconv.Itoa(int(sensorAddress)), startTime, endTime)
 
@@ -240,7 +240,7 @@ func (couchProvider *CouchDBPersistenceProvider) GetSensorReadingsInPeriod(
 		rows = append(rows, row.Reading)
 		log.Println(row.Reading)
 	}
-	return &rows, nil
+	return rows, nil
 
 }
 

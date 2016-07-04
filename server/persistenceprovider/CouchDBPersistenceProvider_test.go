@@ -76,27 +76,31 @@ func initTest() {
 
 func ConnectToCouch() (*pp.CouchDBPersistenceProvider, error) {
 	initTest()
+	var persProv pp.PersistenceProvider
 	var cdbp *pp.CouchDBPersistenceProvider
 	var err error
 	if username != nil {
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
 	} else {
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
 	}
+	cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 	return cdbp, err
 }
 
 func TestNewPersistenceProviderShouldOK(t *testing.T) {
 	initTest()
+	var persProv pp.PersistenceProvider
 	var cdbp *pp.CouchDBPersistenceProvider
 	var err error
 
 	if username != nil {
 		t.Log("Trying to create a CouchDBProvider with user and pass arguments")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		if cdbp.CouchCredentials == nil {
 			t.Fatalf("Credentials should be set here, got nil")
 		}
@@ -104,26 +108,29 @@ func TestNewPersistenceProviderShouldOK(t *testing.T) {
 		cdbp.DeleteDB()
 
 		t.Log("Trying to create a CouchDBProvider with user and pass arguments and dbname")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password, "fakedb")
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password, "fakedb")
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		defer cdbp.DeleteDB()
 	} else {
 		t.Log("Trying to create a CouchDBProvider with right arguments")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		if cdbp.CouchCredentials != nil {
 			t.Fatalf("No credentials should be set here, got not nil")
 		}
 		cdbp.DeleteDB()
 		t.Log("Trying to create a CouchDBProvider with dbname")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, "fakedb")
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, "fakedb")
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		defer cdbp.DeleteDB()
 	}
 	if cdbp.CouchCredentials != nil {
@@ -139,8 +146,9 @@ func TestNewPersistenceProviderShouldOK(t *testing.T) {
 func TestNewPersistenceProviderShouldFail(t *testing.T) {
 	initTest()
 	t.Log("Trying to create a CouchDBProvider without arguments")
-	cdbp, err := pp.CouchDBPersistenceProvider{}.NewPersistenceProvider()
+	persProv, err := pp.CouchDBPersistenceProvider{}.NewPersistenceProvider()
 	if err == nil {
+		cdbp := persProv.(*pp.CouchDBPersistenceProvider)
 		defer cdbp.DeleteDB()
 		t.Fatalf("An error should have occured when calling without params")
 	}
@@ -231,15 +239,15 @@ func TestGetSensorReadingsInPeriod(t *testing.T) {
 	if readings == nil {
 		t.Fatal("No nul result expected when retrieving records in a period. Got nil")
 	}
-	if len(*readings) != 3 {
-		t.Fatalf("Expected 3 readings, got %s", len(*readings))
+	if len(readings) != 3 {
+		t.Fatalf("Expected 3 readings, got %s", len(readings))
 	}
 
 	if readingsIntermediary == nil {
 		t.Fatal("Intermediary: No nul result expected when retrieving records in a period. Got nil")
 	}
-	if len(*readingsIntermediary) != 2 {
-		t.Fatalf("Expected 2 readings, got %d", len(*readingsIntermediary))
+	if len(readingsIntermediary) != 2 {
+		t.Fatalf("Expected 2 readings, got %d", len(readingsIntermediary))
 	}
 
 }

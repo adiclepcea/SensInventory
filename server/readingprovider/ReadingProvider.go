@@ -1,4 +1,4 @@
-package server
+package readingprovider
 
 import (
 	"github.com/adiclepcea/SensInventory/server/common"
@@ -9,5 +9,5 @@ import (
 //that reads sensors
 type ReadingProvider interface {
 	NewReadingProvider(*configprovider.ConfigProvider) ReadingProvider
-	GetReading(int) (*common.Reading, *error)
+	GetReading(uint8, string, uint16, uint16) (*common.Reading, error)
 }

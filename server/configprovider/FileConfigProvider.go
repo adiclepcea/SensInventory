@@ -13,17 +13,20 @@ import (
 
 const defaultFileName = "./config.json"
 
+//TODO Add mutex or a channel so that just one thread will write or read to
+//the file at a time
+
 //FileConfigProvider contains the configuration for the server
 type FileConfigProvider struct {
 	Sensors        map[string]common.Sensor `json:"Sensors"`
 	MinAddress     uint8                    `json:"minAddress"`
 	MaxAddress     uint8                    `json:"maxAddress"`
 	FileConfigName string                   `json:"-"`
-	ConfigProvider `json:"-"`
+	ConfigProvider
 }
 
 //NewConfigProvider creates a new ConfigProvider
-func (FileConfigProvider) NewConfigProvider(params ...string) (*FileConfigProvider, error) {
+func (FileConfigProvider) NewConfigProvider(params ...string) (ConfigProvider, error) {
 	c := FileConfigProvider{FileConfigName: defaultFileName}
 	if len(params) == 1 {
 		c.FileConfigName = params[0]
@@ -219,8 +222,10 @@ func (configProvider *FileConfigProvider) ChangeSensor(address uint8, after comm
 		return err
 	}
 
+	//TODO - check for validity of ReadGroups
 	sensorBefore.Description = after.Description
 	sensorBefore.Registers = after.Registers
+	sensorBefore.ReadGroups = after.ReadGroups
 	configProvider.Sensors[strconv.Itoa(int(sensorBefore.Address))] = *sensorBefore
 
 	return configProvider.Save()

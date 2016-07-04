@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/adiclepcea/SensInventory/server"
 	"github.com/adiclepcea/SensInventory/server/common"
 	"github.com/adiclepcea/SensInventory/server/configprovider"
+	"github.com/adiclepcea/SensInventory/server/readingprovider"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,7 +22,7 @@ func main() {
 	conf.AddSensor(sensor1)
 	conf.AddSensor(sensor2)
 
-	mockServer := server.MockReadingProvider{}.NewReadingProvider(conf)
+	mockServer := readingprovider.MockReadingProvider{}.NewReadingProvider(&conf)
 
 	r := gin.Default()
 
@@ -38,7 +38,7 @@ func main() {
 			return
 		}
 
-		readValues, e := mockServer.GetReading(uint8(nAddress))
+		readValues, e := mockServer.GetReading(uint8(nAddress), common.Holding, 1, 1)
 		if e != nil {
 			c.JSON(500, gin.H{"error": (e).Error()})
 		} else {
