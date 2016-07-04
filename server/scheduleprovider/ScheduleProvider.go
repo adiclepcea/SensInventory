@@ -62,6 +62,7 @@ func (intervalTimer *IntervalTimer) startReading() {
 	if intervalTimer.Interval != nil {
 		intervalTimer.ticker = time.NewTicker(*intervalTimer.Interval)
 		go func() {
+			intervalTimer.read()
 			for t := range intervalTimer.ticker.C {
 				log.Printf("Reading sensor %d, start location=%d, length=%d, type=%s, %v",
 					intervalTimer.SensorAddress, intervalTimer.StartLocation,

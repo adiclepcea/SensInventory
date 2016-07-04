@@ -1,6 +1,7 @@
 package scheduleprovider_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -52,11 +53,14 @@ func TestScheduleProviderShouldOk(t *testing.T) {
 	rp := readingprovider.MockReadingProvider{}.NewReadingProvider(&cp)
 	pp, _ := persistenceprovider.MockPersistenceProvider{}.NewPersistenceProvider()
 	schprovider := scheduleprovider.ScheduleProvider{}.NewScheduleProvider(rp, &pp)
+	firstRun := time.Now().Add(time.Second * 10)
 	it := scheduleprovider.IntervalTimer{}
 	it.Persist = true
 	it.ReadType = common.Holding
 	it.SensorAddress = 33
 	it.StartLocation = 100
+	it.FirstTime = &firstRun
+	fmt.Println(firstRun)
 	it.ReadLength = 1
 	interv := (time.Second * 6)
 	it.Interval = &interv
@@ -77,6 +81,6 @@ func TestScheduleProviderShouldOk(t *testing.T) {
 	}
 
 	schprovider.Start()
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 	schprovider.Stop()
 }
