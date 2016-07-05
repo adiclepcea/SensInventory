@@ -26,8 +26,9 @@ type IntervalTimer struct {
 	ReadLength          uint16         `json:"readLength"`
 	Interval            *time.Duration `json:"interval"`
 	Repeat              bool           `json:"repeat"`
-	FirstTime           *time.Time     `json:"time"`
+	FirstTime           *time.Time     `json:"firstTime,omitempty"`
 	Persist             bool           `json:"store"`
+	LastRun             *time.Time     `json:"lastRun,omitempty"`
 	readingChannel      chan readingprovider.ReadingProvider
 	persistenceProvider *persistenceprovider.PersistenceProvider
 	timer               *time.Timer
@@ -46,6 +47,9 @@ func (intervalTimer *IntervalTimer) Start() {
 		}
 		var firstTime time.Time
 		firstTime = *intervalTimer.FirstTime
+		if intervalTimer.LastRun != nil {
+			firstTime = *intervalTimer.LastRun
+		}
 		//TODO Find a better method to calculate when to run first
 		//as this can take a lot of time for a FirstTime set well before
 		//and a short interval
@@ -62,6 +66,9 @@ func (intervalTimer *IntervalTimer) startReading() {
 	if intervalTimer.Interval != nil {
 		intervalTimer.ticker = time.NewTicker(*intervalTimer.Interval)
 		go func() {
+			log.Printf("Reading sensor %d, start location=%d, length=%d, type=%s, %v",
+				intervalTimer.SensorAddress, intervalTimer.StartLocation,
+				intervalTimer.ReadLength, intervalTimer.ReadType, time.Now())
 			intervalTimer.read()
 			for t := range intervalTimer.ticker.C {
 				log.Printf("Reading sensor %d, start location=%d, length=%d, type=%s, %v",
@@ -84,6 +91,8 @@ func (intervalTimer *IntervalTimer) read() {
 		intervalTimer.ReadType, intervalTimer.StartLocation,
 		intervalTimer.ReadLength)
 	intervalTimer.readingChannel <- readingProvider
+	now := time.Now()
+	intervalTimer.LastRun = &now
 
 	if err != nil {
 		log.Printf("Error: %s, sensor %d, start %d, length %d, type %s\n",

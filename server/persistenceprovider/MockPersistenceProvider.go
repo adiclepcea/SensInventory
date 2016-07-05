@@ -26,8 +26,9 @@ func (MockPersistenceProvider) NewPersistenceProvider(params ...string) (Persist
 
 //SaveSensorReading - mocks saving a sensor
 func (mpp *MockPersistenceProvider) SaveSensorReading(reading common.Reading) error {
-	tr := timedReading{Reading: reading, ReadTime: time.Now()}
-	log.Printf("Saving %d\n", reading.Sensor)
+	tempTime, _ := time.Parse(common.TimeFormat, reading.Time)
+	tr := timedReading{Reading: reading, ReadTime: tempTime}
+	log.Printf("Saving %d, %s\n", reading.Sensor, reading.Time)
 	mpp.timedReadings = append(mpp.timedReadings, tr)
 	return nil
 }
@@ -35,6 +36,7 @@ func (mpp *MockPersistenceProvider) SaveSensorReading(reading common.Reading) er
 //GetSensorReading returns the reading for sensor with sensorAddress at the exact time t
 func (mpp *MockPersistenceProvider) GetSensorReading(sensorAddress uint8, t time.Time) (*common.Reading, error) {
 	for _, tr := range mpp.timedReadings {
+		fmt.Printf("%v vs %v\n", tr.ReadTime, t)
 		if tr.ReadTime.Equal(t) && tr.Reading.Sensor == sensorAddress {
 			return &tr.Reading, nil
 		}
@@ -105,7 +107,7 @@ func (mpp *MockPersistenceProvider) DeleteSensorReading(sensorAddress uint8, t t
 func (mpp *MockPersistenceProvider) DeleteSensorReadingsInPeriod(sensorAddress uint8, start time.Time, end time.Time) error {
 	rez := mpp.timedReadings[:0]
 	for _, tr := range mpp.timedReadings {
-		if tr.ReadTime.Before(end) && tr.ReadTime.After(start) && tr.Reading.Sensor == sensorAddress {
+		if !(tr.ReadTime.Before(end) && tr.ReadTime.After(start) && tr.Reading.Sensor == sensorAddress) {
 			rez = append(rez, tr)
 		}
 	}
@@ -117,7 +119,7 @@ func (mpp *MockPersistenceProvider) DeleteSensorReadingsInPeriod(sensorAddress u
 func (mpp *MockPersistenceProvider) DeleteAllReadingsInPeriod(start time.Time, end time.Time) error {
 	rez := mpp.timedReadings[:0]
 	for _, tr := range mpp.timedReadings {
-		if tr.ReadTime.Before(end) && tr.ReadTime.After(start) {
+		if !(tr.ReadTime.Before(end) && tr.ReadTime.After(start)) {
 			rez = append(rez, tr)
 		}
 	}
