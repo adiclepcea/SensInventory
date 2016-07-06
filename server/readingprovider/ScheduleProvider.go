@@ -1,4 +1,4 @@
-package scheduleprovider
+package readingprovider
 
 import (
 	"fmt"
@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/adiclepcea/SensInventory/server/persistenceprovider"
-	"github.com/adiclepcea/SensInventory/server/readingprovider"
 )
 
 //ScheduleProvider is the base structure needed for
 //a scheduled read/write of sensors
 type ScheduleProvider struct {
-	readingProvider     readingprovider.ReadingProvider
-	readingChannel      chan readingprovider.ReadingProvider
+	readingProvider     ReadingProvider
+	readingChannel      chan ReadingProvider
 	persistenceProvider *persistenceprovider.PersistenceProvider
 	Timers              []IntervalTimer `json:"timers"`
 }
@@ -29,7 +28,8 @@ type IntervalTimer struct {
 	FirstTime           *time.Time     `json:"firstTime,omitempty"`
 	Persist             bool           `json:"store"`
 	LastRun             *time.Time     `json:"lastRun,omitempty"`
-	readingChannel      chan readingprovider.ReadingProvider
+	schProvider         *ScheduleProvider
+	readingChannel      chan ReadingProvider
 	persistenceProvider *persistenceprovider.PersistenceProvider
 	timer               *time.Timer
 	ticker              *time.Ticker
@@ -69,45 +69,57 @@ func (intervalTimer *IntervalTimer) startReading() {
 			log.Printf("Reading sensor %d, start location=%d, length=%d, type=%s, %v",
 				intervalTimer.SensorAddress, intervalTimer.StartLocation,
 				intervalTimer.ReadLength, intervalTimer.ReadType, time.Now())
-			intervalTimer.read()
+			intervalTimer.Read()
 			for t := range intervalTimer.ticker.C {
 				log.Printf("Reading sensor %d, start location=%d, length=%d, type=%s, %v",
 					intervalTimer.SensorAddress, intervalTimer.StartLocation,
 					intervalTimer.ReadLength, intervalTimer.ReadType, t)
-				intervalTimer.read()
+				intervalTimer.Read()
 			}
 		}()
 	}
 
 }
 
-func (intervalTimer *IntervalTimer) read() {
-	if intervalTimer.readingChannel == nil {
+func (schProvider *ScheduleProvider) Read(sensorAddress uint8, readType string, location uint16, length uint16, persist bool, intervalTimer *IntervalTimer) error {
+	if schProvider.readingChannel == nil {
 		log.Println("No reading provider defined.")
-		return
+		return fmt.Errorf("No reading channel provided")
 	}
-	readingProvider := <-intervalTimer.readingChannel
-	reading, err := readingProvider.GetReading(intervalTimer.SensorAddress,
-		intervalTimer.ReadType, intervalTimer.StartLocation,
-		intervalTimer.ReadLength)
-	intervalTimer.readingChannel <- readingProvider
+	readingProvider := <-schProvider.readingChannel
+	reading, err := readingProvider.GetReading(sensorAddress,
+		readType, location,
+		length)
+	schProvider.readingChannel <- readingProvider
 	now := time.Now()
-	intervalTimer.LastRun = &now
-
+	if intervalTimer != nil {
+		intervalTimer.LastRun = &now
+	}
 	if err != nil {
 		log.Printf("Error: %s, sensor %d, start %d, length %d, type %s\n",
-			err.Error(), intervalTimer.SensorAddress, intervalTimer.StartLocation,
-			intervalTimer.ReadLength, intervalTimer.ReadType)
-		return
+			err.Error(), sensorAddress, location,
+			length, readType)
+		return err
 	}
-	if intervalTimer.Persist {
+	if persist {
 		if reading != nil {
-			err = (*intervalTimer.persistenceProvider).SaveSensorReading(*reading)
+			err = (*schProvider.persistenceProvider).SaveSensorReading(*reading)
 			if err != nil {
 				log.Printf("Error persisting %s\n", err.Error())
+				return err
 			}
 		}
 	}
+	return nil
+}
+
+func (intervalTimer *IntervalTimer) Read() error {
+	return intervalTimer.schProvider.Read(intervalTimer.SensorAddress,
+		intervalTimer.ReadType,
+		intervalTimer.StartLocation,
+		intervalTimer.ReadLength,
+		true,
+		intervalTimer)
 }
 
 //Stop will stop the ticker so that no more reading will happen
@@ -125,9 +137,9 @@ func (intervalTimer *IntervalTimer) Stop() {
 
 //NewScheduleProvider initializes a ScheduleProvider and creates a channel for
 //reading
-func (ScheduleProvider) NewScheduleProvider(rp readingprovider.ReadingProvider, pp *persistenceprovider.PersistenceProvider) *ScheduleProvider {
+func (ScheduleProvider) NewScheduleProvider(rp ReadingProvider, pp *persistenceprovider.PersistenceProvider) *ScheduleProvider {
 	schProvider := ScheduleProvider{readingProvider: rp, persistenceProvider: pp}
-	schProvider.readingChannel = make(chan readingprovider.ReadingProvider, 1)
+	schProvider.readingChannel = make(chan ReadingProvider, 1)
 	return &schProvider
 }
 
@@ -141,6 +153,7 @@ func (schProvider *ScheduleProvider) AddTimer(intervalTimer IntervalTimer) error
 	}
 	intervalTimer.readingChannel = schProvider.readingChannel
 	intervalTimer.persistenceProvider = schProvider.persistenceProvider
+	intervalTimer.schProvider = schProvider
 	schProvider.Timers = append(schProvider.Timers, intervalTimer)
 	return nil
 }

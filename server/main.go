@@ -23,6 +23,7 @@ type ErrorMessage struct {
 var configProvider configprovider.ConfigProvider
 var persistenceProvider persistenceprovider.PersistenceProvider
 var readingProvider readingprovider.ReadingProvider
+var scheduleProvider *readingprovider.ScheduleProvider
 
 func initialize() {
 	var err error
@@ -43,6 +44,9 @@ func initialize() {
 	//This was the purpose anyway
 	readingProvider = readingprovider.ModBUSReadingProvider{}.NewReadingProvider(&configProvider)
 
+	scheduleProvider = readingprovider.ScheduleProvider{}.NewScheduleProvider(readingProvider, &persistenceProvider)
+	scheduleProvider.Start()
+
 }
 
 func errorToJSONByteArray(errorString string, err error) []byte {
@@ -62,6 +66,16 @@ func returnSuccess(w http.ResponseWriter) {
 	}{Result: "OK"}
 	encoder := json.NewEncoder(w)
 	encoder.Encode(success)
+}
+
+func getSensors(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	sensors := configProvider.GetSensors()
+	rez := make(map[string]string)
+	for addr, sensor := range sensors {
+		rez[addr] = sensor.Description
+	}
+	encoder := json.NewEncoder(w)
+	encoder.Encode(rez)
 }
 
 func getSensor(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -227,13 +241,14 @@ func readSensor(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	}
 	log.Printf("Reading sensor %d, type %s, start %d, length %d ",
 		sensorAddress, typeString, startLocation, length)
-	reading, err := readingProvider.GetReading(uint8(sensorAddress), typeString, uint16(startLocation), uint16(length))
+	err = scheduleProvider.Read(uint8(sensorAddress), typeString, uint16(startLocation), uint16(length), true, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(errorToJSONByteArray("could not read sensor", err))
+		return
 	}
 	encoder := json.NewEncoder(w)
-	encoder.Encode(reading)
+	encoder.Encode(map[string]string{"Status": "OK"})
 }
 
 func main() {
@@ -244,6 +259,7 @@ func main() {
 	mux.POST("/sensors", addSensor)
 	mux.DELETE("/sensors/:sensor", deleteSensor)
 	mux.PUT("/sensors/:sensor", changeSensor)
+	mux.GET("/sensors", getSensors)
 
 	mux.GET("/read/:sensor/:type/:start/:length", readSensor)
 

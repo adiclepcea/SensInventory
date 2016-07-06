@@ -1,4 +1,4 @@
-package scheduleprovider_test
+package readingprovider
 
 import (
 	"fmt"
@@ -8,13 +8,11 @@ import (
 	"github.com/adiclepcea/SensInventory/server/common"
 	"github.com/adiclepcea/SensInventory/server/configprovider"
 	"github.com/adiclepcea/SensInventory/server/persistenceprovider"
-	"github.com/adiclepcea/SensInventory/server/readingprovider"
-	"github.com/adiclepcea/SensInventory/server/scheduleprovider"
 )
 
 func TestScheduleProviderNotNewShouldFail(t *testing.T) {
-	schprovider := scheduleprovider.ScheduleProvider{}
-	it := scheduleprovider.IntervalTimer{}
+	schprovider := ScheduleProvider{}
+	it := IntervalTimer{}
 	err := schprovider.AddTimer(it)
 	if err == nil {
 		t.Fatal("Expected error while adding an intervalTimer on an not initialized scheduleprovider got nil")
@@ -23,9 +21,9 @@ func TestScheduleProviderNotNewShouldFail(t *testing.T) {
 
 func TestScheduleProviderShouldFail(t *testing.T) {
 	cp, _ := configprovider.MockConfigProvider{}.NewConfigProvider()
-	rp := readingprovider.MockReadingProvider{}.NewReadingProvider(&cp)
-	schprovider := scheduleprovider.ScheduleProvider{}.NewScheduleProvider(rp, nil)
-	it := scheduleprovider.IntervalTimer{}
+	rp := MockReadingProvider{}.NewReadingProvider(&cp)
+	schprovider := ScheduleProvider{}.NewScheduleProvider(rp, nil)
+	it := IntervalTimer{}
 	it.Persist = true
 	err := schprovider.AddTimer(it)
 	if err == nil {
@@ -50,11 +48,11 @@ func TestScheduleProviderShouldOk(t *testing.T) {
 		Name: "test ReadValue", Location: 10, Type: common.Holding}}
 	cp.AddSensor(sensor1)
 	cp.AddSensor(sensor2)
-	rp := readingprovider.MockReadingProvider{}.NewReadingProvider(&cp)
+	rp := MockReadingProvider{}.NewReadingProvider(&cp)
 	pp, _ := persistenceprovider.MockPersistenceProvider{}.NewPersistenceProvider()
-	schprovider := scheduleprovider.ScheduleProvider{}.NewScheduleProvider(rp, &pp)
+	schprovider := ScheduleProvider{}.NewScheduleProvider(rp, &pp)
 	firstRun := time.Now().Add(time.Second * 10)
-	it := scheduleprovider.IntervalTimer{}
+	it := IntervalTimer{}
 	it.Persist = true
 	it.ReadType = common.Holding
 	it.SensorAddress = 33
@@ -65,7 +63,7 @@ func TestScheduleProviderShouldOk(t *testing.T) {
 	interv := (time.Second * 6)
 	it.Interval = &interv
 
-	it2 := scheduleprovider.IntervalTimer{}
+	it2 := IntervalTimer{}
 	it2.Persist = true
 	it2.ReadType = common.Holding
 	it2.SensorAddress = 22
