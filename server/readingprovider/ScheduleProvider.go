@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/adiclepcea/SensInventory/server/configprovider"
@@ -206,39 +207,42 @@ func (schProvider *ScheduleProvider) Stop() {
 
 //Save saves the scheduleprovider using the persistence provider
 func (schProvider *ScheduleProvider) Save() error {
-	if schProvider.persistenceProvider == nil {
-		return fmt.Errorf("No persistence provider specified.")
-	}
-	pp := *schProvider.persistenceProvider
-
-	if err := pp.SaveItem("scheduleProvider", *schProvider); err != nil {
+	schFile, err := os.Create("schedule.json")
+	if err != nil {
 		return err
 	}
-	log.Println("Saved")
+	defer schFile.Close()
+	jsonEncoder := json.NewEncoder(schFile)
+
+	if err = jsonEncoder.Encode(schProvider); err != nil {
+		return err
+	}
+
 	return nil
+
 }
 
 //Load loads the schedule provider from the provided persistenceprovider
 func (schProvider *ScheduleProvider) Load() error {
-	if schProvider.persistenceProvider == nil {
-		return fmt.Errorf("No persistence provider specified.")
+	if _, err := os.Stat("schedule.json"); err != nil {
+		log.Println("Schedule file not found")
+		return fmt.Errorf("No schedule file found")
 	}
-	pp := *schProvider.persistenceProvider
-	readVal, err := pp.ReadItem("scheduleProvider")
+
+	schFile, err := os.Open("schedule.json")
+	if err != nil {
+		log.Printf("Error while opening the sch file %s: %s",
+			"shedule.json", err.Error())
+		return err
+	}
+	defer schFile.Close()
+	_, err = schFile.Stat()
 	if err != nil {
 		return err
 	}
-	var sch ScheduleProvider
-	if readVal == nil {
-		return nil
-	}
-
-	jsonval, err := json.Marshal(readVal)
-	if err != nil {
-		return err
-	}
-
-	if err = json.Unmarshal(jsonval, &sch); err != nil {
+	sch := ScheduleProvider{}
+	jsonParser := json.NewDecoder(schFile)
+	if err = jsonParser.Decode(&sch); err != nil {
 		return err
 	}
 
