@@ -3,6 +3,7 @@
 package persistenceprovider_test
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"testing"
@@ -76,27 +77,31 @@ func initTest() {
 
 func ConnectToCouch() (*pp.CouchDBPersistenceProvider, error) {
 	initTest()
+	var persProv pp.PersistenceProvider
 	var cdbp *pp.CouchDBPersistenceProvider
 	var err error
 	if username != nil {
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
 	} else {
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
 	}
+	cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 	return cdbp, err
 }
 
 func TestNewPersistenceProviderShouldOK(t *testing.T) {
 	initTest()
+	var persProv pp.PersistenceProvider
 	var cdbp *pp.CouchDBPersistenceProvider
 	var err error
 
 	if username != nil {
 		t.Log("Trying to create a CouchDBProvider with user and pass arguments")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password)
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		if cdbp.CouchCredentials == nil {
 			t.Fatalf("Credentials should be set here, got nil")
 		}
@@ -104,26 +109,29 @@ func TestNewPersistenceProviderShouldOK(t *testing.T) {
 		cdbp.DeleteDB()
 
 		t.Log("Trying to create a CouchDBProvider with user and pass arguments and dbname")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password, "fakedb")
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, *username, *password, "fakedb")
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		defer cdbp.DeleteDB()
 	} else {
 		t.Log("Trying to create a CouchDBProvider with right arguments")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer)
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		if cdbp.CouchCredentials != nil {
 			t.Fatalf("No credentials should be set here, got not nil")
 		}
 		cdbp.DeleteDB()
 		t.Log("Trying to create a CouchDBProvider with dbname")
-		cdbp, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, "fakedb")
+		persProv, err = pp.CouchDBPersistenceProvider{}.NewPersistenceProvider(testServer, "fakedb")
 		if err != nil {
 			t.Fatalf("No error is expected here, got %s", err.Error())
 		}
+		cdbp = persProv.(*pp.CouchDBPersistenceProvider)
 		defer cdbp.DeleteDB()
 	}
 	if cdbp.CouchCredentials != nil {
@@ -139,8 +147,9 @@ func TestNewPersistenceProviderShouldOK(t *testing.T) {
 func TestNewPersistenceProviderShouldFail(t *testing.T) {
 	initTest()
 	t.Log("Trying to create a CouchDBProvider without arguments")
-	cdbp, err := pp.CouchDBPersistenceProvider{}.NewPersistenceProvider()
+	persProv, err := pp.CouchDBPersistenceProvider{}.NewPersistenceProvider()
 	if err == nil {
+		cdbp := persProv.(*pp.CouchDBPersistenceProvider)
 		defer cdbp.DeleteDB()
 		t.Fatalf("An error should have occured when calling without params")
 	}
@@ -231,15 +240,15 @@ func TestGetSensorReadingsInPeriod(t *testing.T) {
 	if readings == nil {
 		t.Fatal("No nul result expected when retrieving records in a period. Got nil")
 	}
-	if len(*readings) != 3 {
-		t.Fatalf("Expected 3 readings, got %s", len(*readings))
+	if len(readings) != 3 {
+		t.Fatalf("Expected 3 readings, got %s", len(readings))
 	}
 
 	if readingsIntermediary == nil {
 		t.Fatal("Intermediary: No nul result expected when retrieving records in a period. Got nil")
 	}
-	if len(*readingsIntermediary) != 2 {
-		t.Fatalf("Expected 2 readings, got %d", len(*readingsIntermediary))
+	if len(readingsIntermediary) != 2 {
+		t.Fatalf("Expected 2 readings, got %d", len(readingsIntermediary))
 	}
 
 }
@@ -447,7 +456,7 @@ func TestDeleteSensorReadingsInPeriod(t *testing.T) {
 	}
 }
 
-func TestDeleterReadingsInPeriod(t *testing.T) {
+func TestDeleteReadingsInPeriod(t *testing.T) {
 	cdbp, err := ConnectToCouch()
 	if err != nil {
 		t.Fatal("No error Expected when connecting to couchdb, got ", err.Error())
@@ -459,26 +468,23 @@ func TestDeleterReadingsInPeriod(t *testing.T) {
 	if err != nil {
 		t.Fatal("No error expected when getting time from string")
 	}
-
+	defer cdbp.DeleteDB()
 	err = cdbp.SaveSensorReading(reading1)
 	cdbp.SaveSensorReading(reading2)
 	cdbp.SaveSensorReading(reading3)
 
 	if err != nil {
-		cdbp.DeleteDB()
 		t.Fatal("No error expected when saving a reading, got ", err.Error())
 	}
 
 	err = cdbp.DeleteAllReadingsInPeriod(startTime, endTime)
 
 	if err != nil {
-		cdbp.DeleteDB()
 		t.Fatalf("No error expected while deleting an existing reading. Got", err.Error())
 	}
 
 	err = cdbp.DeleteAllReadingsInPeriod(startTime, endTime)
 	if err == nil {
-		cdbp.DeleteDB()
 		t.Fatalf("Error expected while deleting an inexistent reading. Got", err)
 	}
 
@@ -487,4 +493,55 @@ func TestDeleterReadingsInPeriod(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Error expected while deleting a reading from an inexistent db. Got", err)
 	}
+}
+
+func TestAddReadItem(t *testing.T) {
+	cdbp, err := ConnectToCouch()
+	if err != nil {
+		t.Fatal("No error expected when connecting to couchdb, got ", err.Error())
+	}
+	//defer cdbp.DeleteDB()
+	type tItem struct {
+		Value string
+	}
+
+	testValue := tItem{Value: "item to save"}
+	testName := "item_name_for_test"
+	err = cdbp.SaveItem(testName, testValue)
+	if err != nil {
+		t.Fatal("No error expected when saving an item, got ", err.Error())
+	}
+
+	rez, err := cdbp.ReadItem(testName)
+	if err != nil {
+		t.Error("No error expected when reading an existing item, got ", err.Error())
+		t.FailNow()
+	}
+	if rez == nil {
+		t.Fatal("A value expected, got: nil when reading an existent item")
+	}
+
+	j, err := json.Marshal(rez)
+
+	var val tItem
+
+	err = json.Unmarshal(j, &val)
+
+	if err != nil {
+		t.Fatalf("Expected a valid tItem, got error when unmarshaling: %e", err.Error())
+	}
+
+	if val.Value != testValue.Value {
+		t.Fatalf("Expected %s, got %s when reading the test value", testValue.Value, val.Value)
+	}
+
+	rez, err = cdbp.ReadItem("non_existent_item")
+	if err != nil {
+		t.Fatal("No error expected when reading an inexistent item, got ", err.Error())
+	}
+
+	if rez != nil {
+		t.Fatal("Expected a nil rezult when reading an inexistent item, got ", rez)
+	}
+
 }

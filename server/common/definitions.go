@@ -60,10 +60,10 @@ func (reading *Reading) InitCalculatedValues() {
 //ReadGroup uses the values of a group of registers
 //to calculate a resultant value
 type ReadGroup struct {
-	SensorAddress uint8  `json:"sensorAddress"`
-	StartLocation uint16 `json:"startLocation"`
-	ResultType    string `json:"resultType"`
-	ReadGroupWorker
+	SensorAddress   uint8  `json:"sensorAddress"`
+	StartLocation   uint16 `json:"startLocation"`
+	ResultType      string `json:"resultType"`
+	ReadGroupWorker `json:"-"`
 }
 
 //ReadGroupWorker defines the methods needed to

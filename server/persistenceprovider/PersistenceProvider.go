@@ -19,4 +19,6 @@ type PersistenceProvider interface {
 	DeleteSensorReading(uint8, time.Time) error
 	DeleteSensorReadingsInPeriod(uint8, time.Time, time.Time) error
 	DeleteAllReadingsInPeriod(time.Time, time.Time) error
+	SaveItem(string, interface{}) error
+	ReadItem(string) (interface{}, error)
 }

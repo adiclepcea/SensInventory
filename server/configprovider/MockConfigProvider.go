@@ -18,7 +18,7 @@ type MockConfigProvider struct {
 }
 
 //NewConfigProvider creates a new ConfigProvider
-func (MockConfigProvider) NewConfigProvider() (*MockConfigProvider, error) {
+func (MockConfigProvider) NewConfigProvider(params ...string) (ConfigProvider, error) {
 	c := MockConfigProvider{}
 
 	c.Sensors = make(map[string]common.Sensor)
@@ -159,9 +159,10 @@ func (configProvider *MockConfigProvider) ChangeSensor(address uint8, after comm
 	if err = configProvider.IsSensorValid(after); err != nil {
 		return err
 	}
-
+	//TODO - check for validity of ReadGroups
 	sensorBefore.Description = after.Description
 	sensorBefore.Registers = after.Registers
+	sensorBefore.ReadGroups = after.ReadGroups
 	configProvider.Sensors[strconv.Itoa(int(sensorBefore.Address))] = *sensorBefore
 
 	return nil

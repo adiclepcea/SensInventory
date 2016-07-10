@@ -1,4 +1,4 @@
-package server
+package readingprovider
 
 import (
 	"math/rand"
@@ -10,13 +10,13 @@ import (
 
 //MockReadingProvider is a mock provider for reading sensors. Used in tests
 type MockReadingProvider struct {
-	Conf configprovider.MockConfigProvider
+	Conf configprovider.ConfigProvider
 	ReadingProvider
 }
 
 //NewReadingProvider returns a new reading provider having the configuration
 //provided by "cp"
-func (mockReadingProvider MockReadingProvider) NewReadingProvider(cp *configprovider.MockConfigProvider) *MockReadingProvider {
+func (mockReadingProvider MockReadingProvider) NewReadingProvider(cp *configprovider.ConfigProvider) ReadingProvider {
 	mockReadingProvider.Conf = *cp
 
 	return &mockReadingProvider
@@ -40,7 +40,7 @@ func (mockReadingProvider *MockReadingProvider) getRandValueForConfiguredValue(c
 }
 
 //GetReading returns a mock random read from the sensor having address "address"
-func (mockReadingProvider *MockReadingProvider) GetReading(address uint8) (*common.Reading, error) {
+func (mockReadingProvider *MockReadingProvider) GetReading(address uint8, readingType string, startLocation uint16, length uint16) (*common.Reading, error) {
 
 	sensor, err := mockReadingProvider.Conf.GetSensorByAddress(address)
 
@@ -48,6 +48,7 @@ func (mockReadingProvider *MockReadingProvider) GetReading(address uint8) (*comm
 		return nil, err
 	}
 
-	reading := common.Reading{Sensor: sensor.Address, Time: time.Now().Format(common.TimeFormat), ReadValues: mockReadingProvider.getRandValuesForSensor(*sensor)}
+	reading := common.Reading{Sensor: sensor.Address, Time: time.Now().Format(common.TimeFormat),
+		ReadValues: mockReadingProvider.getRandValuesForSensor(*sensor)}
 	return &reading, nil
 }

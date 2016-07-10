@@ -13,9 +13,9 @@ import (
 
 const (
 	defaultCouchDBDatabase        = "sensinventory"
-	viewOneQueryPrefix            = "_design/readings/_view/sensorTime?key="
-	viewSensorInPeriodQueryPrefix = "_design/readings/_view/sensorTime?startkey="
-	viewAllInPeriodQueryPrefix    = "_design/readings/_view/byTime?startkey="
+	viewOneQueryPrefix            = "_design/sens_views/_view/sensorTime?key="
+	viewSensorInPeriodQueryPrefix = "_design/sens_views/_view/sensorTime?startkey="
+	viewAllInPeriodQueryPrefix    = "_design/sens_views/_view/byTime?startkey="
 )
 
 //CouchDBPersistenceProvider defines the structure for a
@@ -26,6 +26,13 @@ type CouchDBPersistenceProvider struct {
 	CouchCredentials *couch.Credentials
 	Database         couch.Database
 	PersistenceProvider
+}
+
+//CouchDBItem will be used to store a generic item into couchdb
+type CouchDBItem struct {
+	couch.Doc
+	Name string      `json:"Generic_Item_Name"`
+	Item interface{} `json:"Generic_Item"`
 }
 
 //CouchDBReading is used to operate with Readings in CouchDB
@@ -47,9 +54,22 @@ type couchDBResult struct {
 	Rows      []couchDBRow `json:"rows"`
 }
 
+type couchDBInterfaceResult struct {
+	TotalRows int                   `json:"total_rows"`
+	Offset    int                   `json:"offset"`
+	Rows      []couchDBInterfaceRow `json:"rows"`
+}
+
+type couchDBInterfaceRow struct {
+	ID    string      `json:"id"`
+	Key   interface{} `json:"key"`
+	Value interface{} `json:"value"`
+	Row   interface{} `json:"doc,omitempty"`
+}
+
 //NewPersistenceProvider creates a new persistence
 //provider that will save data in CouchDB
-func (CouchDBPersistenceProvider) NewPersistenceProvider(params ...string) (*CouchDBPersistenceProvider, error) {
+func (CouchDBPersistenceProvider) NewPersistenceProvider(params ...string) (PersistenceProvider, error) {
 	if len(params) == 0 {
 		return nil, fmt.Errorf("No parameters given for connection")
 	}
@@ -86,7 +106,7 @@ func (couchProvider *CouchDBPersistenceProvider) createViews(views map[string]st
 	}
 
 	view := make(map[string]interface{})
-	view["_id"] = "_design/readings"
+	view["_id"] = "_design/sens_views"
 	view["language"] = "javascript"
 	view["views"] = viewCode
 
@@ -112,6 +132,7 @@ func (couchProvider *CouchDBPersistenceProvider) CreateDB() (*couch.Database, er
 		mapViews := make(map[string]string)
 		mapViews["sensorTime"] = "function(doc){if(doc.Reading) emit([doc.Reading.sensor,doc.Reading.time],null);}"
 		mapViews["byTime"] = "function(doc){if(doc.Reading) emit(doc.Reading.time,null);}"
+		mapViews["itemByName"] = "function(doc){if(doc.Generic_Item) emit(doc.Generic_Item_Name,null);}"
 		if err := couchProvider.createViews(mapViews); err != nil {
 			couchProvider.DeleteDB()
 			return nil, err
@@ -200,6 +221,25 @@ func (couchProvider *CouchDBPersistenceProvider) GetCouchDBReadings(query string
 	return &rows, nil
 }
 
+//GetCouchDBItems is a generic method for returning a data from a query
+func (couchProvider *CouchDBPersistenceProvider) GetCouchDBItems(query string) (*[]interface{}, error) {
+	var resp couchDBInterfaceResult
+	_, err := couch.Do(couchProvider.getBaseQueryString()+query,
+		"GET", couchProvider.CouchCredentials, nil, &resp)
+	log.Printf(couchProvider.getBaseQueryString() + query)
+	if err != nil {
+		log.Printf("Error  asking for results %s returned %s",
+			couchProvider.getBaseQueryString()+query, err.Error())
+		return nil, err
+	}
+	var rows []interface{}
+	for _, row := range resp.Rows {
+		rows = append(rows, row.Row)
+		log.Println(row.Row)
+	}
+	return &rows, nil
+}
+
 //GetSensorReading returns the reading for the sensor with address
 //"sensorAddress" at the time "time"
 func (couchProvider *CouchDBPersistenceProvider) GetSensorReading(sensorAddress uint8, time time.Time) (*common.Reading, error) {
@@ -217,13 +257,13 @@ func (couchProvider *CouchDBPersistenceProvider) GetSensorReading(sensorAddress 
 	}
 
 	return &(*resp)[0].Reading, nil
-	// curl 'http://localhost:5984/sensinventory/_design/readings/_view/sensorTime?key=\[10,"2016-06-13%2023:28:48"\]&include_docs=true'
+	// curl 'http://localhost:5984/sensinventory/_design/sens_views/_view/sensorTime?key=\[10,"2016-06-13%2023:28:48"\]&include_docs=true'
 }
 
 //GetSensorReadingsInPeriod returns the readings for a sensor in a given period
 func (couchProvider *CouchDBPersistenceProvider) GetSensorReadingsInPeriod(
 	sensorAddress uint8, startTime time.Time,
-	endTime time.Time) (*[]common.Reading, error) {
+	endTime time.Time) ([]common.Reading, error) {
 
 	query := getViewQueryStringSensorInPeriod(strconv.Itoa(int(sensorAddress)), startTime, endTime)
 
@@ -240,7 +280,7 @@ func (couchProvider *CouchDBPersistenceProvider) GetSensorReadingsInPeriod(
 		rows = append(rows, row.Reading)
 		log.Println(row.Reading)
 	}
-	return &rows, nil
+	return rows, nil
 
 }
 
@@ -396,4 +436,53 @@ func (couchProvider *CouchDBPersistenceProvider) DeleteAllReadingsInPeriod(
 	}
 
 	return nil
+}
+
+//SaveItem stores the json value of the object into the database
+func (couchProvider *CouchDBPersistenceProvider) SaveItem(name string, value interface{}) error {
+
+	server := couch.NewServer(couchProvider.CouchServer, couchProvider.CouchCredentials)
+
+	db := server.Database(couchProvider.CouchDatabase)
+
+	if !db.Exists() {
+		return fmt.Errorf("Database missing")
+	}
+
+	cdbItem := CouchDBItem{Name: name, Item: value}
+	log.Printf("Saving in couchdb: %v\n", cdbItem)
+	return db.Insert(&cdbItem)
+
+}
+
+//ReadItem returns the item having the name "name"
+func (couchProvider *CouchDBPersistenceProvider) ReadItem(name string) (interface{}, error) {
+	server := couch.NewServer(couchProvider.CouchServer, couchProvider.CouchCredentials)
+
+	db := server.Database(couchProvider.CouchDatabase)
+
+	if !db.Exists() {
+		return nil, fmt.Errorf("Database missing")
+	}
+	rows, err := couchProvider.GetCouchDBItems("_design/sens_views/_view/itemByName?key=\"" + name + "\"&include_docs=true")
+
+	if err != nil {
+		return nil, err
+	}
+
+	var rez map[string]interface{}
+
+	if rows != nil && len(*rows) > 0 {
+
+		rez = (*rows)[0].(map[string]interface{})
+
+		if rez["Generic_Item"] == nil {
+			return nil, fmt.Errorf("Expected a json containing Generic_Item, got: %v", rez)
+		}
+
+	} else {
+		return nil, nil
+	}
+
+	return rez["Generic_Item"], nil
 }

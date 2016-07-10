@@ -2,7 +2,10 @@
 go: 
   - 1.5
   - 1.6
+sudo: required
+services:
+  - docker
 language: go
 script: go test -v ./... && go vet ./... && ./server/testFmt.sh && ./server/testCoverage.sh 
 after_success:
-        - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
