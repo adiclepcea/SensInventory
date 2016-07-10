@@ -16,12 +16,15 @@ type timedReading struct {
 //MockPersistenceProvider is a fake persistence provider
 type MockPersistenceProvider struct {
 	timedReadings []timedReading
+	items         map[string]interface{}
 	PersistenceProvider
 }
 
 //NewPersistenceProvider - initiate a new MockReadingProvider
 func (MockPersistenceProvider) NewPersistenceProvider(params ...string) (PersistenceProvider, error) {
-	return &MockPersistenceProvider{}, nil
+	m := MockPersistenceProvider{}
+	m.items = make(map[string]interface{})
+	return &m, nil
 }
 
 //SaveSensorReading - mocks saving a sensor
@@ -125,4 +128,15 @@ func (mpp *MockPersistenceProvider) DeleteAllReadingsInPeriod(start time.Time, e
 	}
 	mpp.timedReadings = rez
 	return nil
+}
+
+//SaveItem persists a generic item
+func (mpp *MockPersistenceProvider) SaveItem(name string, item interface{}) error {
+	mpp.items[name] = item
+	return nil
+}
+
+//ReadItem return the item having the persisted name
+func (mpp *MockPersistenceProvider) ReadItem(name string) (interface{}, error) {
+	return mpp.items[name], nil
 }

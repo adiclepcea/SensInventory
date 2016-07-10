@@ -8,6 +8,35 @@ import (
 	"github.com/adiclepcea/SensInventory/server/readgroups"
 )
 
+func TestMockAddReadItem(t *testing.T) {
+	mp, _ := MockPersistenceProvider{}.NewPersistenceProvider()
+
+	testValue := "test"
+	testName := "item name"
+
+	err := mp.SaveItem(testName, testValue)
+	if err != nil {
+		t.Errorf("No error expected when adding an item got %s", err.Error())
+	}
+
+	_, err = mp.ReadItem("no such item")
+
+	if err != nil {
+		t.Errorf("No error is expected when retrieving an item that does not exist, got %s",
+			err.Error())
+	}
+
+	val, err := mp.ReadItem(testName)
+	if err != nil {
+		t.Errorf("No error expected when retrieving an existent item. Got %s", err.Error())
+	}
+
+	if val != testValue {
+		t.Error("Expected", testValue, "got", val, " when retrieving item named ", testName)
+	}
+
+}
+
 func TestMockPersistenceProvider(t *testing.T) {
 	mp, _ := MockPersistenceProvider{}.NewPersistenceProvider()
 

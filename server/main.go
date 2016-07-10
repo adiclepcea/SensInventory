@@ -68,6 +68,90 @@ func returnSuccess(w http.ResponseWriter) {
 	encoder.Encode(success)
 }
 
+func saveSchedule(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	err := scheduleProvider.Save()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(errorToJSONByteArray("could not save schedule", err))
+		return
+	}
+	returnSuccess(w)
+}
+
+func loadSchedule(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	err := scheduleProvider.Load()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(errorToJSONByteArray("could not save schedule", err))
+		return
+	}
+	returnSuccess(w)
+}
+
+func getTimers(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	it := scheduleProvider.Timers
+
+	encoder := json.NewEncoder(w)
+	if it == nil {
+		encoder.Encode(map[string]interface{}{})
+		return
+	}
+	encoder.Encode(it)
+}
+
+func deleteTimer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	var err error
+	var itAddress int
+	w.Header().Add("Content-Type", "application/json")
+	itString := p.ByName("timer")
+	if itAddress, err = strconv.Atoi(itString); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(errorToJSONByteArray("could not convert to valid sensor address", err))
+		return
+	}
+	log.Printf("Deleting sensor %d\n", itAddress)
+	err = scheduleProvider.RemoveTimer(itAddress)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(errorToJSONByteArray("could not delete timer", err))
+		return
+	}
+	returnSuccess(w)
+}
+
+func addTimer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	w.Header().Add("Content-Type", "application/json")
+	it, err := getTimerFromBody(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(errorToJSONByteArray("no valid timer received", err))
+		return
+	}
+	log.Printf("Adding timer for sensor %d\n", it.SensorAddress)
+
+	err = scheduleProvider.AddTimer(*it)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(errorToJSONByteArray("could not add timer", err))
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	returnSuccess(w)
+}
+
+func getTimerFromBody(r *http.Request) (*readingprovider.IntervalTimer, error) {
+	decoder := json.NewDecoder(r.Body)
+	var it readingprovider.IntervalTimer
+	err := decoder.Decode(&it)
+	if err != nil {
+		return nil, err
+	}
+
+	return &it, nil
+
+}
+
 func getSensors(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	sensors := configProvider.GetSensors()
 	rez := make(map[string]string)
@@ -260,6 +344,11 @@ func main() {
 	mux.DELETE("/sensors/:sensor", deleteSensor)
 	mux.PUT("/sensors/:sensor", changeSensor)
 	mux.GET("/sensors", getSensors)
+	mux.POST("/schedule/timers", addTimer)
+	mux.DELETE("/schedule/timers/:timer", deleteTimer)
+	mux.GET("/schedule/timers", getTimers)
+	mux.PUT("/schedule/save", saveSchedule)
+	mux.PUT("/schedule/load", loadSchedule)
 
 	mux.GET("/read/:sensor/:type/:start/:length", readSensor)
 

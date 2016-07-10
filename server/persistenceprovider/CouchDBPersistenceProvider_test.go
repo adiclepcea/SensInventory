@@ -3,6 +3,7 @@
 package persistenceprovider_test
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"testing"
@@ -492,4 +493,55 @@ func TestDeleteReadingsInPeriod(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Error expected while deleting a reading from an inexistent db. Got", err)
 	}
+}
+
+func TestAddReadItem(t *testing.T) {
+	cdbp, err := ConnectToCouch()
+	if err != nil {
+		t.Fatal("No error expected when connecting to couchdb, got ", err.Error())
+	}
+	//defer cdbp.DeleteDB()
+	type tItem struct {
+		Value string
+	}
+
+	testValue := tItem{Value: "item to save"}
+	testName := "item_name_for_test"
+	err = cdbp.SaveItem(testName, testValue)
+	if err != nil {
+		t.Fatal("No error expected when saving an item, got ", err.Error())
+	}
+
+	rez, err := cdbp.ReadItem(testName)
+	if err != nil {
+		t.Error("No error expected when reading an existing item, got ", err.Error())
+		t.FailNow()
+	}
+	if rez == nil {
+		t.Fatal("A value expected, got: nil when reading an existent item")
+	}
+
+	j, err := json.Marshal(rez)
+
+	var val tItem
+
+	err = json.Unmarshal(j, &val)
+
+	if err != nil {
+		t.Fatalf("Expected a valid tItem, got error when unmarshaling: %e", err.Error())
+	}
+
+	if val.Value != testValue.Value {
+		t.Fatalf("Expected %s, got %s when reading the test value", testValue.Value, val.Value)
+	}
+
+	rez, err = cdbp.ReadItem("non_existent_item")
+	if err != nil {
+		t.Fatal("No error expected when reading an inexistent item, got ", err.Error())
+	}
+
+	if rez != nil {
+		t.Fatal("Expected a nil rezult when reading an inexistent item, got ", rez)
+	}
+
 }

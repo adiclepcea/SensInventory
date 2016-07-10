@@ -81,4 +81,25 @@ func TestScheduleProviderShouldOk(t *testing.T) {
 	schprovider.Start()
 	time.Sleep(30 * time.Second)
 	schprovider.Stop()
+
+	err = schprovider.Save()
+	if err != nil {
+		t.Fatal("No error expected when saving the schedule provider. Got:", err.Error())
+	}
+
+	schprovider2 := ScheduleProvider{}.NewScheduleProvider(rp, &pp)
+	err = schprovider2.Load()
+
+	if err != nil {
+		t.Fatal("No error expected when loading the schedule provider. Got:", err.Error())
+	}
+
+	if schprovider.Timers[0].ReadType != schprovider2.Timers[0].ReadType ||
+		schprovider.Timers[0].FirstTime.String() != schprovider2.Timers[0].FirstTime.String() ||
+		schprovider.Timers[0].Interval.String() != schprovider2.Timers[0].Interval.String() ||
+		schprovider.Timers[0].Persist != schprovider2.Timers[0].Persist ||
+		schprovider.Timers[0].Repeat != schprovider2.Timers[0].Repeat {
+		t.Fatalf("Expected %v, got %v after load", schprovider, schprovider2)
+	}
+
 }

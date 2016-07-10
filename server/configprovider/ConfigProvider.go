@@ -15,4 +15,5 @@ type ConfigProvider interface {
 	ChangeSensorAddress(addressBefore uint8, addressAfter uint8) error
 	ChangeSensor(address uint8, after common.Sensor) error
 	GetSensors() map[string]common.Sensor
+	//SetTimers([]common.IntervalTimer)
 }
