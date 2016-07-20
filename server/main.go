@@ -291,9 +291,6 @@ func isTypeOk(typeString string) bool {
 }
 
 func readSensor(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	//TODO -- see if it is not better to put everything into
-	//a scheduler that will read automatically and store it in
-	//the persistenceprovider
 	var sensorAddress int
 	var startLocation int
 	var length int
